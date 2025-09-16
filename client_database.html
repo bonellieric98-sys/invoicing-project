@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <a href="index.html" class="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+        <span class="font-medium">Back to Home</span>
+</a>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Database</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-5xl mx-auto bg-white rounded-lg shadow-xl p-6 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Client Database</h1>
+            <p class="text-gray-500">Manage and track your clients with ease.</p>
+        </header>
+
+        <div class="mb-8 p-6 bg-gray-50 rounded-lg shadow-inner">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Add New Client</h2>
+            <form id="client-form" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">Client Name</label>
+                        <input type="text" id="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" required>
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                        <input type="tel" id="phone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                    </div>
+                    <div>
+                        <label for="contact-person" class="block text-sm font-medium text-gray-700">Contact Person Name</label>
+                        <input type="text" id="contact-person" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                    </div>
+                </div>
+                <div class="w-full">
+                    <label for="address" class="block text-sm font-medium text-gray-700">Client Address</label>
+                    <input type="text" id="address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white font-medium py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">Add Client</button>
+            </form>
+        </div>
+
+        <div>
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Clients</h2>
+            <div class="overflow-x-auto rounded-lg shadow-md">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client #</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone #</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Person</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="client-list" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+            <p id="no-clients-message" class="text-center text-gray-500 mt-4 hidden">No clients added yet.</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, onSnapshot, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // IMPORTANT: Global variables are automatically provided by the Canvas environment.
+        // DO NOT modify these lines.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyD9SrWqQVL0_GxfBISBBezUOqQMbE_fiRU",
+            authDomain: "invoicing-platform-f29ac.firebaseapp.com",
+            projectId: "invoicing-platform-f29ac",
+            storageBucket: "invoicing-platform-f29ac.firebasestorage.app",
+            messagingSenderId: "632172765378",
+            appId: "1:632172765378:web:072134627a2226ddab9b5b",
+            measurementId: "G-NSK0H0SQBE"
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db;
+        let user_id = null;
+
+        const form = document.getElementById('client-form');
+        const clientList = document.getElementById('client-list');
+        const noClientsMessage = document.getElementById('no-clients-message');
+
+        let clientCounter = 0;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        db = getFirestore(app);
+
+        // Authenticate the user anonymously
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                user_id = user.uid;
+                console.log("User authenticated:", user_id);
+                setupFirestoreListener();
+            } else {
+                console.log("No user signed in. Attempting anonymous sign-in...");
+                try {
+                    await signInAnonymously(auth);
+                } catch (error) {
+                    console.error("Authentication failed:", error);
+                }
+            }
+        });
+
+        // Set up real-time listener for clients
+        function setupFirestoreListener() {
+            if (!user_id) {
+                console.warn("Firestore listener not set up. User not authenticated yet.");
+                return;
+            }
+
+            const clientsCollectionRef = collection(db, `artifacts/${appId}/users/${user_id}/clients`);
+
+            onSnapshot(clientsCollectionRef, (snapshot) => {
+                const clients = [];
+                let maxId = 0;
+                snapshot.forEach(doc => {
+                    const clientData = { id: doc.id, ...doc.data() };
+                    clients.push(clientData);
+                    const clientNumber = parseInt(clientData.clientNumber, 10);
+                    if (clientNumber > maxId) {
+                        maxId = clientNumber;
+                    }
+                });
+                clientCounter = maxId + 1;
+                renderClients(clients);
+            }, (error) => {
+                console.error("Error fetching documents: ", error);
+            });
+        }
+
+        // Render the client list
+        function renderClients(clients) {
+            clientList.innerHTML = '';
+            if (clients.length === 0) {
+                noClientsMessage.classList.remove('hidden');
+            } else {
+                noClientsMessage.classList.add('hidden');
+            }
+
+            clients.sort((a, b) => a.clientNumber - b.clientNumber).forEach((client, index) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-100 transition-colors duration-200';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${client.clientNumber}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.phone}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.contactPerson}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.address || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="edit-btn text-indigo-600 hover:text-indigo-900 transition-colors mr-2" data-id="${client.id}" title="Edit Client">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                        <button class="delete-btn text-red-600 hover:text-red-900 transition-colors" data-id="${client.id}" title="Delete Client">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                clientList.appendChild(row);
+            });
+        }
+
+        // Handle form submission for adding or editing
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!user_id) {
+                console.error("User not authenticated.");
+                return;
+            }
+
+            const clientData = {
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                contactPerson: document.getElementById('contact-person').value,
+                address: document.getElementById('address').value
+            };
+
+            const editingId = form.dataset.editingId;
+
+            try {
+                if (editingId) {
+                    // Update existing client
+                    const clientRef = doc(db, `artifacts/${appId}/users/${user_id}/clients`, editingId);
+                    await updateDoc(clientRef, clientData);
+                    console.log("Client updated successfully!");
+
+                    form.removeAttribute('data-editingId');
+                    document.querySelector('#client-form button').textContent = 'Add Client';
+
+                } else {
+                    // Add new client
+                    const newClientData = { ...clientData, clientNumber: clientCounter };
+                    await addDoc(collection(db, `artifacts/${appId}/users/${user_id}/clients`), newClientData);
+                    console.log("Client added successfully!");
+                }
+                form.reset();
+            } catch (error) {
+                console.error("Error writing document: ", error);
+            }
+        });
+
+        // Handle edit and delete button clicks
+        clientList.addEventListener('click', async (e) => {
+            const deleteBtn = e.target.closest('.delete-btn');
+            if (deleteBtn) {
+                const idToDelete = deleteBtn.dataset.id;
+                if (!user_id) {
+                    console.error("User not authenticated.");
+                    return;
+                }
+                try {
+                    await deleteDoc(doc(db, `artifacts/${appId}/users/${user_id}/clients`, idToDelete));
+                    console.log("Client deleted successfully!");
+                } catch (error) {
+                    console.error("Error deleting document: ", error);
+                }
+            }
+
+            const editBtn = e.target.closest('.edit-btn');
+            if (editBtn) {
+                const idToEdit = editBtn.dataset.id;
+                const clientToEdit = (await getDocs(collection(db, `artifacts/${appId}/users/${user_id}/clients`)))
+                    .docs.find(doc => doc.id === idToEdit)?.data();
+
+                if (clientToEdit) {
+                    document.getElementById('name').value = clientToEdit.name;
+                    document.getElementById('phone').value = clientToEdit.phone;
+                    document.getElementById('email').value = clientToEdit.email;
+                    document.getElementById('contact-person').value = clientToEdit.contactPerson;
+                    document.getElementById('address').value = clientToEdit.address;
+
+                    form.dataset.editingId = idToEdit;
+                    document.querySelector('#client-form button').textContent = 'Update Client';
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

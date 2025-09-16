@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profitability Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex items-center justify-center min-h-screen">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-xl p-6 md:p-8 w-full">
+
+        <!-- Back Arrow Button -->
+        <a href="javascript:history.back()" class="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span class="font-medium">Back to Home</span>
+        </a>
+
+        <!-- Header -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Profitability Report</h1>
+            <p class="text-gray-500">A comprehensive summary of your business's financial health.</p>
+        </header>
+
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <p class="mt-2 text-gray-500">Loading financial data...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="hidden text-center py-8">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                <svg class="mx-auto h-12 w-12 text-red-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="text-lg font-medium text-red-800 mb-2">Unable to Load Data</h3>
+                <p class="text-red-600 mb-4" id="error-message">There was an error loading your financial data.</p>
+                <button onclick="retryLoad()" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors">
+                    Try Again
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content (hidden initially) -->
+        <div id="main-content" class="hidden">
+            <!-- Time Frame Filter Form -->
+            <div class="mb-6 bg-gray-50 p-4 rounded-lg shadow-inner flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+                <div class="flex-grow w-full md:w-auto">
+                    <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm p-2 border">
+                </div>
+                <div class="flex-grow w-full md:w-auto">
+                    <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
+                    <input type="date" id="end_date" name="end_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm p-2 border">
+                </div>
+                <button type="button" onclick="filterData()" class="w-full md:w-auto mt-4 md:mt-0 bg-indigo-600 text-white font-medium py-2 px-6 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">Filter</button>
+                <button type="button" onclick="clearFilter()" class="w-full md:w-auto mt-2 md:mt-0 bg-gray-500 text-white font-medium py-2 px-4 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">Clear</button>
+            </div>
+
+            <!-- Financial Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center mb-8">
+                <!-- Total Revenue Card -->
+                <div class="bg-blue-50 p-6 rounded-lg shadow-sm border border-blue-200">
+                    <h2 class="text-lg font-semibold text-blue-700">Total Revenue</h2>
+                    <p id="revenue-total" class="text-3xl font-bold text-blue-900 mt-2">$0.00</p>
+                    <p id="revenue-count" class="text-sm text-blue-600 mt-1">$0.00 paid + $0.00 outstanding</p>
+                </div>
+
+                <!-- Total Expenses Card -->
+                <div class="bg-red-50 p-6 rounded-lg shadow-sm border border-red-200">
+                    <h2 class="text-lg font-semibold text-red-700">Total Expenses</h2>
+                    <p id="expenses-total" class="text-3xl font-bold text-red-900 mt-2">$0.00</p>
+                    <p id="expenses-count" class="text-sm text-red-600 mt-1">0 recorded expenses</p>
+                </div>
+
+                <!-- Profit Card -->
+                <div id="profit-card" class="bg-green-50 p-6 rounded-lg shadow-sm border border-green-200">
+                    <h2 class="text-lg font-semibold text-green-700">Net Profit</h2>
+                    <p id="profit-total" class="text-3xl font-bold text-green-900 mt-2">$0.00</p>
+                    <p id="profit-percentage" class="text-sm font-medium text-green-600 mt-1">(0.00%)</p>
+                </div>
+            </div>
+
+            <!-- Outstanding Invoices Summary -->
+            <div class="bg-yellow-50 p-6 rounded-lg shadow-sm border border-yellow-200 mb-8">
+                <h3 class="text-lg font-semibold text-yellow-700 mb-2">Outstanding Invoices</h3>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-2xl font-bold text-yellow-900" id="outstanding-total">$0.00</p>
+                        <p class="text-sm text-yellow-600" id="outstanding-count">0 unpaid invoices</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Comprehensive Financial Totals Section -->
+            <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+                <h3 class="text-xl font-semibold text-gray-700 mb-6">Comprehensive Financial Totals</h3>
+
+                <!-- Revenue Breakdown -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                    <div class="bg-blue-100 p-4 rounded-lg">
+                        <h4 class="text-sm font-medium text-blue-700 mb-1">Paid Invoices</h4>
+                        <p id="paid-invoice-total" class="text-lg font-bold text-blue-900">$0.00</p>
+                        <p id="paid-invoice-count" class="text-xs text-blue-600">0 invoices</p>
+                    </div>
+
+                    <div class="bg-yellow-100 p-4 rounded-lg">
+                        <h4 class="text-sm font-medium text-yellow-700 mb-1">Outstanding Invoices</h4>
+                        <p id="outstanding-invoice-total" class="text-lg font-bold text-yellow-900">$0.00</p>
+                        <p id="outstanding-invoice-count" class="text-xs text-yellow-600">0 invoices</p>
+                    </div>
+
+                    <div class="bg-green-100 p-4 rounded-lg">
+                        <h4 class="text-sm font-medium text-green-700 mb-1">Bank Deposits</h4>
+                        <p id="bank-deposits-total" class="text-lg font-bold text-green-900">$0.00</p>
+                        <p id="bank-deposits-count" class="text-xs text-green-600">0 statements</p>
+                    </div>
+
+                    <div class="bg-red-100 p-4 rounded-lg">
+                        <h4 class="text-sm font-medium text-red-700 mb-1">Manual Expenses</h4>
+                        <p id="manual-expenses-total" class="text-lg font-bold text-red-900">$0.00</p>
+                        <p id="manual-expenses-count" class="text-xs text-red-600">0 expenses</p>
+                    </div>
+
+                    <div class="bg-orange-100 p-4 rounded-lg">
+                        <h4 class="text-sm font-medium text-orange-700 mb-1">Bank Withdrawals</h4>
+                        <p id="bank-withdrawals-total" class="text-lg font-bold text-orange-900">$0.00</p>
+                        <p id="bank-withdrawals-count" class="text-xs text-orange-600">0 statements</p>
+                    </div>
+                </div>
+
+                <!-- Grand Totals -->
+                <div class="border-t border-gray-300 pt-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="text-center">
+                            <h4 class="text-sm font-medium text-gray-600 mb-1">Total Revenue Available</h4>
+                            <p id="total-revenue-available" class="text-xl font-bold text-blue-900">$0.00</p>
+                            <p class="text-xs text-gray-500">(Paid + Outstanding + Bank)</p>
+                        </div>
+
+                        <div class="text-center">
+                            <h4 class="text-sm font-medium text-gray-600 mb-1">Actual Cash Received</h4>
+                            <p id="actual-cash-received" class="text-xl font-bold text-green-900">$0.00</p>
+                            <p class="text-xs text-gray-500">(Paid Invoices + Bank Deposits)</p>
+                        </div>
+
+                        <div class="text-center">
+                            <h4 class="text-sm font-medium text-gray-600 mb-1">Total Expenses</h4>
+                            <p id="total-all-expenses" class="text-xl font-bold text-red-900">$0.00</p>
+                            <p class="text-xs text-gray-500">(Manual + Bank Withdrawals)</p>
+                        </div>
+
+                        <div class="text-center">
+                            <h4 class="text-sm font-medium text-gray-600 mb-1">Net Cash Flow</h4>
+                            <p id="net-cash-flow" class="text-xl font-bold text-green-900">$0.00</p>
+                            <p id="cash-flow-margin" class="text-xs text-gray-500">(0.00% of cash received)</p>
+                        </div>
+                    </div>
+
+                    <!-- Potential vs Actual Analysis -->
+                    <div class="mt-6 pt-4 border-t border-gray-200">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="text-center bg-blue-50 p-4 rounded-lg">
+                                <h4 class="text-lg font-semibold text-blue-700 mb-2">Potential Net Profit</h4>
+                                <p id="potential-net-profit" class="text-2xl font-bold text-blue-900">$0.00</p>
+                                <p id="potential-profit-margin" class="text-sm text-blue-600">(0.00% of total revenue)</p>
+                                <p class="text-xs text-gray-600 mt-1">If all outstanding invoices are paid</p>
+                            </div>
+
+                            <div class="text-center bg-green-50 p-4 rounded-lg">
+                                <h4 class="text-lg font-semibold text-green-700 mb-2">Actual Net Cash Flow</h4>
+                                <p id="actual-net-cash-display" class="text-2xl font-bold text-green-900">$0.00</p>
+                                <p id="actual-cash-margin" class="text-sm text-green-600">(0.00% of cash received)</p>
+                                <p class="text-xs text-gray-600 mt-1">Based on actual cash movements</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date Range Display -->
+            <div id="date-range-display" class="text-center text-sm text-gray-500 mb-4">
+                Showing all-time data
+            </div>
+
+            <!-- Recent Expenses Table -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Recent Expenses</h3>
+                <div class="overflow-x-auto rounded-lg shadow-md">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expense-list" class="bg-white divide-y divide-gray-200">
+                            <!-- Expenses will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import {
+            getFirestore,
+            collection,
+            getDocs,
+            query,
+            where,
+            orderBy,
+            limit
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD9SrWqQVL0_GxfBISBBezUOqQMbE_fiRU",
+            authDomain: "invoicing-platform-f29ac.firebaseapp.com",
+            projectId: "invoicing-platform-f29ac",
+            storageBucket: "invoicing-platform-f29ac.firebasestorage.app",
+            messagingSenderId: "632172765378",
+            appId: "1:632172765378:web:072134627a2226ddab9b5b",
+            measurementId: "G-NSK0H0SQBE"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        let db, auth; // Changed from const to let to allow reassignment
+
+        let user_id = null;
+        let invoices = [];
+        let expenses = [];
+        let bankAnalyses = [];
+        let currentDateFilter = null;
+        let isLoading = false;
+
+        // Remove the old localStorage-based user ID function - we'll use Firebase auth instead
+
+        // Show error state
+        function showError(message) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('main-content').classList.add('hidden');
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error').classList.remove('hidden');
+        }
+
+        // Show loading state
+        function showLoading() {
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('main-content').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+        }
+
+        // Show main content
+        function showContent() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+        }
+
+        // Initialize with Firebase auth (matching bank analyzer)
+        async function init() {
+            if (isLoading) return;
+            isLoading = true;
+
+            showLoading();
+
+            try {
+                // Sign in anonymously like bank analyzer does
+                await signInAnonymously(auth);
+                console.log("Signed in anonymously");
+
+                // Set up auth state listener like bank analyzer
+                auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        user_id = user.uid;
+                        console.log("Firebase user ID:", user_id);
+
+                        try {
+                            await loadData();
+                            showContent();
+                        } catch (error) {
+                            console.error("Error loading data:", error);
+                            showError(`Failed to load data: ${error.message}`);
+                        }
+                    } else {
+                        user_id = 'anonymous';
+                        console.log("No authenticated user");
+                        showError("Authentication failed. Please try again.");
+                    }
+                    isLoading = false;
+                });
+
+            } catch (error) {
+                console.error("Firebase auth error:", error);
+                showError(`Authentication failed: ${error.message}`);
+                isLoading = false;
+            }
+        }
+
+        // Load all data with improved error handling
+        async function loadData() {
+            if (!user_id) {
+                throw new Error('No user ID available');
+            }
+
+            try {
+                // Load data in parallel with reduced limits for faster loading
+                const [invoicesResult, expensesResult, bankAnalysesResult] = await Promise.allSettled([
+                    loadInvoices(),
+                    loadExpenses(),
+                    loadBankAnalyses()
+                ]);
+
+                // Handle individual failures
+                if (invoicesResult.status === 'rejected') {
+                    console.error("Failed to load invoices:", invoicesResult.reason);
+                    invoices = [];
+                }
+
+                if (expensesResult.status === 'rejected') {
+                    console.error("Failed to load expenses:", expensesResult.reason);
+                    expenses = [];
+                }
+
+                if (bankAnalysesResult.status === 'rejected') {
+                    console.error("Failed to load bank analyses:", bankAnalysesResult.reason);
+                    bankAnalyses = [];
+                }
+
+                // Update UI even with partial data
+                updateFinancialSummary();
+                displayExpenses();
+
+            } catch (error) {
+                console.error("Error in loadData:", error);
+                throw error;
+            }
+        }
+
+        // Load invoices - check both Firebase user ID and localStorage user ID
+        async function loadInvoices() {
+            try {
+                const firebaseUserId = user_id;
+                const localStorageUserId = localStorage.getItem('invoicing_user_id');
+
+                console.log("Loading invoices for Firebase user_id:", firebaseUserId);
+                console.log("Also checking localStorage user_id:", localStorageUserId);
+
+                // Create queries for both user IDs
+                const queries = [
+                    query(collection(db, "invoices"), where("user_id", "==", firebaseUserId), limit(100))
+                ];
+
+                if (localStorageUserId && localStorageUserId !== firebaseUserId) {
+                    queries.push(
+                        query(collection(db, "invoices"), where("user_id", "==", localStorageUserId), limit(100))
+                    );
+                }
+
+                invoices = [];
+
+                for (const q of queries) {
+                    const querySnapshot = await getDocs(q);
+                    querySnapshot.forEach((doc) => {
+                        try {
+                            const data = doc.data();
+                            // Avoid duplicates
+                            if (!invoices.find(inv => inv.id === doc.id)) {
+                                invoices.push({
+                                    id: doc.id,
+                                    ...data
+                                });
+                            }
+                        } catch (docError) {
+                            console.error("Error processing invoice document:", docError);
+                        }
+                    });
+                }
+
+                console.log(`Total invoices loaded: ${invoices.length}`);
+
+            } catch (error) {
+                console.error("Error loading invoices:", error);
+                throw new Error(`Failed to load invoices: ${error.message}`);
+            }
+        }
+
+        // Load expenses - check both Firebase user ID and localStorage user ID
+        async function loadExpenses() {
+            try {
+                const firebaseUserId = user_id;
+                const localStorageUserId = localStorage.getItem('invoicing_user_id');
+
+                console.log("Loading expenses for Firebase user_id:", firebaseUserId);
+                console.log("Also checking localStorage user_id:", localStorageUserId);
+
+                // Create queries for both user IDs
+                const queries = [
+                    query(collection(db, "expenses"), where("user_id", "==", firebaseUserId), orderBy("expense_date", "desc"), limit(50))
+                ];
+
+                if (localStorageUserId && localStorageUserId !== firebaseUserId) {
+                    queries.push(
+                        query(collection(db, "expenses"), where("user_id", "==", localStorageUserId), orderBy("expense_date", "desc"), limit(50))
+                    );
+                }
+
+                expenses = [];
+
+                for (const q of queries) {
+                    const querySnapshot = await getDocs(q);
+                    querySnapshot.forEach((doc) => {
+                        try {
+                            const data = doc.data();
+                            console.log("Expense loaded:", {
+                                id: doc.id,
+                                amount: data.amount,
+                                description: data.description,
+                                source: data.source || 'not set',
+                                expense_type: data.expense_type || 'not set',
+                                category: data.category || 'not set'
+                            });
+
+                            // Avoid duplicates
+                            if (!expenses.find(exp => exp.id === doc.id)) {
+                                expenses.push({
+                                    id: doc.id,
+                                    source: data.source || 'manual', // Keep original source or default to manual
+                                    ...data
+                                });
+                            }
+                        } catch (docError) {
+                            console.error("Error processing expense document:", docError);
+                        }
+                    });
+                }
+
+                console.log(`Total expenses loaded: ${expenses.length}`);
+
+            } catch (error) {
+                console.error("Error loading expenses:", error);
+                throw new Error(`Failed to load expenses: ${error.message}`);
+            }
+        }
+
+        // Load bank analyses
+        async function loadBankAnalyses() {
+            try {
+                console.log("Loading bank analyses for user_id:", user_id);
+
+                const q = query(
+                    collection(db, "bank_analyses"),
+                    where("user_id", "==", user_id),
+                    orderBy("createdAt", "desc"),
+                    limit(50)
+                );
+
+                const querySnapshot = await getDocs(q);
+                bankAnalyses = [];
+
+                querySnapshot.forEach((doc) => {
+                    try {
+                        const data = doc.data();
+                        console.log("Bank analysis loaded:", {
+                            id: doc.id,
+                            name: data.name,
+                            revenue: data.revenue,
+                            expenses: data.expenses,
+                            user_id: data.user_id
+                        });
+                        bankAnalyses.push({
+                            id: doc.id,
+                            ...data
+                        });
+                    } catch (docError) {
+                        console.error("Error processing bank analysis document:", docError);
+                    }
+                });
+
+                console.log(`Total bank analyses loaded: ${bankAnalyses.length}`);
+
+            } catch (error) {
+                console.error("Error loading bank analyses:", error);
+                throw new Error(`Failed to load bank analyses: ${error.message}`);
+            }
+        }
+
+        // Filter data by date range
+        function getFilteredData() {
+            let filteredInvoices = invoices;
+            let filteredExpenses = expenses;
+            let filteredBankAnalyses = bankAnalyses;
+
+            if (currentDateFilter) {
+                const { startDate, endDate } = currentDateFilter;
+
+                filteredInvoices = invoices.filter(invoice => {
+                    try {
+                        const invoiceDate = invoice.invoice_date?.toDate ?
+                            invoice.invoice_date.toDate() :
+                            new Date(invoice.invoice_date);
+                        return invoiceDate >= startDate && invoiceDate <= endDate;
+                    } catch (error) {
+                        console.error("Error filtering invoice:", error);
+                        return false;
+                    }
+                });
+
+                filteredExpenses = expenses.filter(expense => {
+                    try {
+                        const expenseDate = expense.expense_date?.toDate ?
+                            expense.expense_date.toDate() :
+                            new Date(expense.expense_date);
+                        return expenseDate >= startDate && expenseDate <= endDate;
+                    } catch (error) {
+                        console.error("Error filtering expense:", error);
+                        return false;
+                    }
+                });
+
+                filteredBankAnalyses = bankAnalyses.filter(analysis => {
+                    try {
+                        const analysisDate = analysis.createdAt?.toDate ?
+                            analysis.createdAt.toDate() :
+                            new Date(analysis.createdAt);
+                        return analysisDate >= startDate && analysisDate <= endDate;
+                    } catch (error) {
+                        console.error("Error filtering bank analysis:", error);
+                        return false;
+                    }
+                });
+            }
+
+            return { filteredInvoices, filteredExpenses, filteredBankAnalyses };
+        }
+
+        // Update financial summary with comprehensive totals
+        function updateFinancialSummary() {
+            try {
+                const { filteredInvoices, filteredExpenses, filteredBankAnalyses } = getFilteredData();
+
+                console.log("=== FINANCIAL SUMMARY CALCULATION ===");
+                console.log("Filtered data counts:", {
+                    invoices: filteredInvoices.length,
+                    expenses: filteredExpenses.length,
+                    bankAnalyses: filteredBankAnalyses.length
+                });
+
+                // Calculate Invoice Revenue (Paid vs Outstanding)
+                const paidInvoices = filteredInvoices.filter(inv => inv.status === 'Paid');
+                const totalPaidInvoices = paidInvoices.reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
+                const outstandingInvoices = filteredInvoices.filter(inv => inv.status === 'Unpaid' || inv.status === 'Pending');
+                const totalOutstanding = outstandingInvoices.reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
+
+                console.log("Invoice totals:", { totalPaidInvoices, totalOutstanding });
+
+                // Calculate Bank Statement Data - FIXED: Use correct field names
+                const totalBankDeposits = filteredBankAnalyses.reduce((sum, analysis, index) => {
+                    const revenue = parseFloat(analysis.revenue) || 0;
+                    console.log(`Bank analysis ${index}: revenue=${revenue}, name=${analysis.name}`);
+                    return sum + revenue;
+                }, 0);
+
+                const totalBankWithdrawals = filteredBankAnalyses.reduce((sum, analysis, index) => {
+                    const expenses = parseFloat(analysis.expenses) || 0;
+                    console.log(`Bank analysis ${index}: expenses=${expenses}, name=${analysis.name}`);
+                    return sum + expenses;
+                }, 0);
+
+                console.log("Bank totals:", { totalBankDeposits, totalBankWithdrawals });
+
+                // Calculate Manual Expenses
+                const totalManualExpenses = filteredExpenses.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+
+                console.log("Manual expenses total:", totalManualExpenses);
+
+                // Comprehensive calculations
+                const totalRevenueAvailable = totalPaidInvoices + totalOutstanding + totalBankDeposits;
+                const actualCashReceived = totalPaidInvoices + totalBankDeposits;
+                const totalAllExpenses = totalManualExpenses + totalBankWithdrawals;
+                const netCashFlow = actualCashReceived - totalAllExpenses;
+                const cashFlowMargin = actualCashReceived > 0 ? (netCashFlow / actualCashReceived) * 100 : 0;
+
+                console.log("Final calculations:", {
+                    totalRevenueAvailable,
+                    actualCashReceived,
+                    totalAllExpenses,
+                    netCashFlow
+                });
+
+                // Potential vs Actual Analysis
+                const potentialNetProfit = totalRevenueAvailable - totalAllExpenses;
+                const potentialProfitMargin = totalRevenueAvailable > 0 ? (potentialNetProfit / totalRevenueAvailable) * 100 : 0;
+                const actualCashMargin = actualCashReceived > 0 ? (netCashFlow / actualCashReceived) * 100 : 0;
+
+                // Legacy calculations for main cards (for backward compatibility)
+                const totalRevenue = totalPaidInvoices + totalOutstanding;
+                const profit = totalRevenue - totalManualExpenses;
+                const profitPercentage = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
+
+                // Update DOM elements safely
+                const updateElement = (id, content) => {
+                    const element = document.getElementById(id);
+                    if (element) element.textContent = content;
+                };
+
+                // Main cards (legacy compatibility)
+                updateElement('revenue-total', `$${totalRevenue.toFixed(2)}`);
+                updateElement('revenue-count', `$${totalPaidInvoices.toFixed(2)} paid + $${totalOutstanding.toFixed(2)} outstanding`);
+                updateElement('expenses-total', `$${totalManualExpenses.toFixed(2)}`);
+                updateElement('expenses-count', `${filteredExpenses.length} recorded expenses`);
+                updateElement('profit-total', `$${profit.toFixed(2)}`);
+                updateElement('profit-percentage', `(${profitPercentage.toFixed(2)}%)`);
+                updateElement('outstanding-total', `$${totalOutstanding.toFixed(2)}`);
+                updateElement('outstanding-count', `${outstandingInvoices.length} unpaid invoices`);
+
+                // Comprehensive totals breakdown
+                updateElement('paid-invoice-total', `$${totalPaidInvoices.toFixed(2)}`);
+                updateElement('paid-invoice-count', `${paidInvoices.length} invoices`);
+                updateElement('outstanding-invoice-total', `$${totalOutstanding.toFixed(2)}`);
+                updateElement('outstanding-invoice-count', `${outstandingInvoices.length} invoices`);
+                updateElement('bank-deposits-total', `$${totalBankDeposits.toFixed(2)}`);
+                updateElement('bank-deposits-count', `${filteredBankAnalyses.length} statements`);
+                updateElement('manual-expenses-total', `$${totalManualExpenses.toFixed(2)}`);
+                updateElement('manual-expenses-count', `${filteredExpenses.length} expenses`);
+                updateElement('bank-withdrawals-total', `$${totalBankWithdrawals.toFixed(2)}`);
+                updateElement('bank-withdrawals-count', `${filteredBankAnalyses.length} statements`);
+
+                // Grand totals
+                updateElement('total-revenue-available', `${totalRevenueAvailable.toFixed(2)}`);
+                updateElement('actual-cash-received', `${actualCashReceived.toFixed(2)}`);
+                updateElement('total-all-expenses', `${totalAllExpenses.toFixed(2)}`);
+                updateElement('net-cash-flow', `${netCashFlow.toFixed(2)}`);
+                updateElement('cash-flow-margin', `(${cashFlowMargin.toFixed(2)}% of cash received)`);
+
+                // Potential vs Actual Analysis
+                updateElement('potential-net-profit', `${potentialNetProfit.toFixed(2)}`);
+                updateElement('potential-profit-margin', `(${potentialProfitMargin.toFixed(2)}% of total revenue)`);
+                updateElement('actual-net-cash-display', `${netCashFlow.toFixed(2)}`);
+                updateElement('actual-cash-margin', `(${actualCashMargin.toFixed(2)}% of cash received)`);
+
+                // Update profit card styling
+                const profitCard = document.getElementById('profit-card');
+                const profitTotal = document.getElementById('profit-total');
+                const profitPercentageEl = document.getElementById('profit-percentage');
+
+                if (profitCard && profitTotal && profitPercentageEl) {
+                    if (profit < 0) {
+                        profitCard.className = 'bg-red-50 p-6 rounded-lg shadow-sm border border-red-200';
+                        profitTotal.className = 'text-3xl font-bold text-red-900 mt-2';
+                        profitPercentageEl.className = 'text-sm font-medium text-red-600 mt-1';
+                        profitCard.querySelector('h2').className = 'text-lg font-semibold text-red-700';
+                    } else {
+                        profitCard.className = 'bg-green-50 p-6 rounded-lg shadow-sm border border-green-200';
+                        profitTotal.className = 'text-3xl font-bold text-green-900 mt-2';
+                        profitPercentageEl.className = 'text-sm font-medium text-green-600 mt-1';
+                        profitCard.querySelector('h2').className = 'text-lg font-semibold text-green-700';
+                    }
+                }
+
+                // Update net cash flow styling
+                const netCashFlowEl = document.getElementById('net-cash-flow');
+                if (netCashFlowEl) {
+                    if (netCashFlow < 0) {
+                        netCashFlowEl.className = 'text-xl font-bold text-red-900';
+                    } else {
+                        netCashFlowEl.className = 'text-xl font-bold text-green-900';
+                    }
+                }
+
+                // Update potential and actual profit styling
+                const potentialProfitEl = document.getElementById('potential-net-profit');
+                const actualCashDisplayEl = document.getElementById('actual-net-cash-display');
+
+                if (potentialProfitEl) {
+                    if (potentialNetProfit < 0) {
+                        potentialProfitEl.className = 'text-2xl font-bold text-red-900';
+                    } else {
+                        potentialProfitEl.className = 'text-2xl font-bold text-blue-900';
+                    }
+                }
+
+                if (actualCashDisplayEl) {
+                    if (netCashFlow < 0) {
+                        actualCashDisplayEl.className = 'text-2xl font-bold text-red-900';
+                    } else {
+                        actualCashDisplayEl.className = 'text-2xl font-bold text-green-900';
+                    }
+                }
+
+                // Update date range display
+                const dateDisplay = document.getElementById('date-range-display');
+                if (dateDisplay) {
+                    if (currentDateFilter) {
+                        const startStr = currentDateFilter.startDate.toLocaleDateString();
+                        const endStr = currentDateFilter.endDate.toLocaleDateString();
+                        dateDisplay.textContent = `Showing data from ${startStr} to ${endStr}`;
+                    } else {
+                        dateDisplay.textContent = 'Showing all-time data';
+                    }
+                }
+
+            } catch (error) {
+                console.error("Error updating financial summary:", error);
+            }
+        }
+
+        // Display expenses in table with bank statement data
+        function displayExpenses() {
+            try {
+                const { filteredExpenses, filteredBankAnalyses } = getFilteredData();
+                const expenseList = document.getElementById('expense-list');
+
+                if (!expenseList) return;
+
+                expenseList.innerHTML = '';
+
+                // Combine manual expenses and bank statement expenses
+                let allExpenses = [];
+
+                // Add manual expenses
+                filteredExpenses.forEach(expense => {
+                    // Use the actual source from the data, or default to 'Manual Entry'
+                    const expenseSource = expense.source ||
+                                        (expense.expense_type ? `${expense.expense_type} Entry` : 'Manual Entry');
+
+                    allExpenses.push({
+                        date: expense.expense_date?.toDate ?
+                            expense.expense_date.toDate() :
+                            new Date(expense.expense_date),
+                        description: expense.description || 'No description',
+                        category: expense.category || 'Uncategorized',
+                        amount: parseFloat(expense.amount) || 0,
+                        source: expenseSource
+                    });
+                });
+
+                console.log(`Added ${filteredExpenses.length} manual/forecast expenses`);
+
+                // Add bank statement expenses - FIXED: Properly handle transactions
+                filteredBankAnalyses.forEach(analysis => {
+                    if (analysis.transactions) {
+                        let transactions = [];
+
+                        // Handle both array and string formats
+                        if (Array.isArray(analysis.transactions)) {
+                            transactions = analysis.transactions;
+                        } else if (typeof analysis.transactions === 'string') {
+                            try {
+                                transactions = JSON.parse(analysis.transactions);
+                            } catch (e) {
+                                console.error('Error parsing transactions:', e);
+                                transactions = [];
+                            }
+                        }
+
+                        transactions.forEach(transaction => {
+                            if (transaction.category === 'Expense') {
+                                allExpenses.push({
+                                    date: new Date(transaction.date),
+                                    description: transaction.description || 'Bank Transaction',
+                                    category: 'Bank Expense',
+                                    amount: Math.abs(parseFloat(transaction.amount)) || 0,
+                                    source: `Bank Statement (${analysis.name || 'Unnamed'})`
+                                });
+                            }
+                        });
+                    }
+                });
+
+                // Sort by date (most recent first)
+                allExpenses.sort((a, b) => b.date - a.date);
+
+                // Show only recent 15 expenses
+                const recentExpenses = allExpenses.slice(0, 15);
+
+                if (recentExpenses.length === 0) {
+                    expenseList.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                <div class="flex flex-col items-center">
+                                    <svg class="h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002 2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                    <p>No expenses recorded</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                recentExpenses.forEach(expense => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 transition-colors';
+
+                    const expenseDate = expense.date.toLocaleDateString();
+                    const sourceClass = expense.source === 'Manual Entry' ? 'text-blue-600' : 'text-green-600';
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${expenseDate}</td>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900">${expense.description}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${expense.category}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-xs ${sourceClass}">${expense.source}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">${expense.amount.toFixed(2)}</td>
+                    `;
+
+                    expenseList.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error("Error displaying expenses:", error);
+            }
+        }
+
+        // Filter data by date range
+        window.filterData = () => {
+            const startDateInput = document.getElementById('start_date');
+            const endDateInput = document.getElementById('end_date');
+
+            if (!startDateInput.value || !endDateInput.value) {
+                alert("Please select both start and end dates");
+                return;
+            }
+
+            const startDate = new Date(startDateInput.value);
+            const endDate = new Date(endDateInput.value);
+
+            if (startDate > endDate) {
+                alert("Start date must be before end date");
+                return;
+            }
+
+            // Set end date to end of day
+            endDate.setHours(23, 59, 59, 999);
+
+            currentDateFilter = { startDate, endDate };
+            updateFinancialSummary();
+            displayExpenses();
+        };
+
+        // Clear date filter
+        window.clearFilter = () => {
+            document.getElementById('start_date').value = '';
+            document.getElementById('end_date').value = '';
+            currentDateFilter = null;
+            updateFinancialSummary();
+            displayExpenses();
+        };
+
+        // Retry loading
+        window.retryLoad = () => {
+            init();
+        };
+
+        // Initialize on page load (matching bank analyzer pattern)
+        window.addEventListener('load', async () => {
+            try {
+                // Initialize Firebase services
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                await init();
+            } catch (error) {
+                console.error("Firebase initialization error:", error);
+                showError(`Failed to initialize application: ${error.message}`);
+            }
+        });
+
+    </script>
+</body>
+</html>

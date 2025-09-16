@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homepage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold mb-2">BillWise Platform</h1>
+            <p class="text-gray-500">Your one-stop solution for managing your business finances.</p>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <a href="invoices.html" class="card">
+                <span class="card-icon" role="img" aria-label="Invoice Icon">📄</span>
+                <h2 class="text-xl font-semibold mb-2">Invoices</h2>
+                <p class="text-gray-500 text-sm">Create and track client invoices.</p>
+            </a>
+
+            <a href="expenses.html" class="card">
+                <span class="card-icon" role="img" aria-label="Expenses Icon">💰</span>
+                <h2 class="text-xl font-semibold mb-2">Forecast Expenses</h2>
+                <p class="text-gray-500 text-sm">Log and track business expenses.</p>
+            </a>
+
+            <a href="profitability.html" class="card">
+                <span class="card-icon" role="img" aria-label="Profit Icon">📈</span>
+                <h2 class="text-xl font-semibold mb-2">Live Profitability Tracker</h2>
+                <p class="text-gray-500 text-sm">View live profit impact.</p>
+            </a>
+
+            <a href="clients.html" class="card">
+                <span class="card-icon" role="img" aria-label="Client Icon">👥</span>
+                <h2 class="text-xl font-semibold mb-2">Clients Database</h2>
+                <p class="text-gray-500 text-sm">Manage your client database.</p>
+            </a>
+
+             <a href="bank_statement.html" class="card">
+                <span class="card-icon" role="img" aria-label="Account Icon">🏦</span>
+                <h2 class="text-xl font-semibold mb-2">Statement Analyzer</h2>
+                <p class="text-gray-500 text-sm">Upload bank statement for insights and analysis.</p>
+            </a>
+
+            <a href="user_profile.html" class="card">
+                <span class="card-icon" role="img" aria-label="Account Icon">⚙️</span>
+                <h2 class="text-xl font-semibold mb-2">Account Settings</h2>
+                <p class="text-gray-500 text-sm">Update your personal and business information.</p>
+            </a>
+
+        </main>
+    </div>
+</body>
+</html>
