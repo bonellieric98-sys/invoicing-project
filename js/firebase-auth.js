@@ -41,7 +41,7 @@ class BillwiseAuth {
             // Redirect to dashboard if on login page
             if (window.location.pathname.includes('login.html') || 
                 window.location.pathname.includes('index.html')) {
-                window.location.href = `${baseURL}/dashboard.html`;
+                window.location.href = '/invoicing-project/index.html';
             }
         } else {
             this.showUnauthenticatedUI();
