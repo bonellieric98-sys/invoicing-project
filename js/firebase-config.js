@@ -1,13 +1,12 @@
-// js/firebase-config.js
-// Firebase configuration for Billwise Invoicing
-export const firebaseConfig = {
-  // TODO: Replace with your actual Firebase config from Firebase Console
-  apiKey: "your-api-key-here",
-  authDomain: "billwise-invoicing.firebaseapp.com", // or your custom domain
-  projectId: "billwise-invoicing", // your project ID
-  storageBucket: "billwise-invoicing.appspot.com",
-  messagingSenderId: "your-messaging-sender-id",
-  appId: "your-app-id"
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyD9SrWqQVL0_GxfBISBBezUOqQMbE_fiRU",
+  authDomain: "invoicing-platform-f29ac.firebaseapp.com",
+  projectId: "invoicing-platform-f29ac",
+  storageBucket: "invoicing-platform-f29ac.firebasestorage.app",
+  messagingSenderId: "632172765378",
+  appId: "1:632172765378:web:072134627a2226ddab9b5b",
+  measurementId: "G-NSK0H0SQBE"
 };
 
 // Environment detection for GitHub Pages
