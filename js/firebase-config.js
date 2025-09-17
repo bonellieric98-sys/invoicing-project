@@ -1,5 +1,5 @@
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyD9SrWqQVL0_GxfBISBBezUOqQMbE_fiRU",
   authDomain: "invoicing-platform-f29ac.firebaseapp.com",
   projectId: "invoicing-platform-f29ac",
