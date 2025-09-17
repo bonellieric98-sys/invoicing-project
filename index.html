@@ -3,592 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Billwise - Authentication</title>
+    <title>Homepage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
         }
-
-        .auth-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-            width: 100%;
-            max-width: 900px;
-            min-height: 600px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .auth-left {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 60px 40px;
-            color: white;
+        .card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            transition: transform 0.2s, box-shadow 0.2s;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            text-align: center;
-        }
-
-        .auth-left h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-
-        .auth-left p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            line-height: 1.6;
-        }
-
-        .auth-right {
-            padding: 60px 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .auth-form {
-            width: 100%;
-        }
-
-        .form-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .form-header h2 {
-            color: #333;
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-
-        .form-header p {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 15px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-google {
-            background: white;
-            color: #333;
-            border: 2px solid #e1e5e9;
-            display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-google:hover {
-            border-color: #db4437;
-            background: #db4437;
-            color: white;
-        }
-
-        .divider {
             text-align: center;
-            margin: 25px 0;
-            position: relative;
         }
-
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: #e1e5e9;
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-
-        .divider span {
-            background: white;
-            padding: 0 20px;
-            color: #666;
-            font-size: 0.9rem;
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
         }
-
-        .form-switch {
-            text-align: center;
-            margin-top: 25px;
-        }
-
-        .form-switch a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .form-switch a:hover {
-            text-decoration: underline;
-        }
-
-        .auth-message {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        .auth-message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .auth-message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .auth-message.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .dashboard {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            padding: 40px;
-            text-align: center;
-            min-height: 400px;
-        }
-
-        .user-info {
-            margin-bottom: 30px;
-        }
-
-        .user-avatar {
-            width: 100px;
-            height: 100px;
+        .settings-button {
+            width: 3rem;
+            height: 3rem;
+            background-color: #ffffff;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 0 auto 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 2rem;
-            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 10;
         }
-
-        .user-name {
-            font-size: 1.5rem;
-            color: #333;
-            margin-bottom: 5px;
+        .settings-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-
-        .user-email {
-            color: #666;
-            font-size: 1rem;
-        }
-
-        .btn-logout {
-            background: #dc3545;
-            color: white;
-            padding: 10px 30px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            margin-top: 20px;
-        }
-
-        .btn-logout:hover {
-            background: #c82333;
-        }
-
-        @media (max-width: 768px) {
-            .auth-container {
-                grid-template-columns: 1fr;
-                max-width: 400px;
-            }
-
-            .auth-left {
-                display: none;
-            }
+        .settings-icon {
+            font-size: 1.25rem;
         }
     </style>
 </head>
-<body>
-    <!-- Authentication Container -->
-    <div id="authContainer" class="auth-container">
-        <div class="auth-left">
-            <h1>Billwise</h1>
-            <p>Professional invoicing made simple. Create, send, and track your invoices with ease.</p>
-        </div>
-        <div class="auth-right">
-            <div id="authMessage" class="auth-message hidden"></div>
-            
-            <!-- Login Form -->
-            <form id="loginForm" class="auth-form">
-                <div class="form-header">
-                    <h2>Welcome Back</h2>
-                    <p>Sign in to your account</p>
-                </div>
-                
-                <div class="form-group">
-                    <label for="loginEmail">Email Address</label>
-                    <input type="email" id="loginEmail" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="loginPassword">Password</label>
-                    <input type="password" id="loginPassword" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">Sign In</button>
-                
-                <div class="divider">
-                    <span>or</span>
-                </div>
-                
-                <button type="button" id="googleSignIn" class="btn btn-google">
-                    <svg width="20" height="20" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Continue with Google
-                </button>
-                
-                <div class="form-switch">
-                    <p>Don't have an account? <a href="#" id="showRegister">Sign up</a></p>
-                </div>
-            </form>
-            
-            <!-- Register Form -->
-            <form id="registerForm" class="auth-form hidden">
-                <div class="form-header">
-                    <h2>Create Account</h2>
-                    <p>Join Billwise today</p>
-                </div>
-                
-                <div class="form-group">
-                    <label for="registerName">Full Name</label>
-                    <input type="text" id="registerName" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="registerEmail">Email Address</label>
-                    <input type="email" id="registerEmail" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="registerPassword">Password</label>
-                    <input type="password" id="registerPassword" minlength="6" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">Create Account</button>
-                
-                <div class="divider">
-                    <span>or</span>
-                </div>
-                
-                <button type="button" id="googleSignUp" class="btn btn-google">
-                    <svg width="20" height="20" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Sign up with Google
-                </button>
-                
-                <div class="form-switch">
-                    <p>Already have an account? <a href="#" id="showLogin">Sign in</a></p>
-                </div>
-            </form>
-        </div>
+<body class="p-8">
+    <!-- Account Settings Button (Top Right) -->
+    <a href="/invoicing-project/user_profile.html" class="settings-button">
+        <span class="settings-icon" role="img" aria-label="Account Settings">⚙️</span>
+    </a>
+
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold mb-2">BillWise</h1>
+            <p class="text-gray-500">Know your numbers, grow your business.</p>
+        </header>
+        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <a href="/invoicing-project/invoice_tracker.html" class="card">
+                <span class="card-icon" role="img" aria-label="Invoice Icon">📄</span>
+                <h2 class="text-xl font-semibold mb-2">Invoices</h2>
+                <p class="text-gray-500 text-sm">Create and track client invoices.</p>
+            </a>
+            <a href="/invoicing-project/expense_tracker.html" class="card">
+                <span class="card-icon" role="img" aria-label="Expenses Icon">💸</span>
+                <h2 class="text-xl font-semibold mb-2">Forecast Expenses</h2>
+                <p class="text-gray-500 text-sm">Log and track business expenses.</p>
+            </a>
+            <a href="/invoicing-project/profitability_report.html" class="card">
+                <span class="card-icon" role="img" aria-label="Profit Icon">📈</span>
+                <h2 class="text-xl font-semibold mb-2">Live Profitability Tracker</h2>
+                <p class="text-gray-500 text-sm">View live profit impact.</p>
+            </a>
+            <a href="/invoicing-project/client_database.html" class="card">
+                <span class="card-icon" role="img" aria-label="Client Icon">👥</span>
+                <h2 class="text-xl font-semibold mb-2">Clients Database</h2>
+                <p class="text-gray-500 text-sm">Manage your client database.</p>
+            </a>
+             <a href="/invoicing-project/bank_statement_analyzer.html" class="card">
+                <span class="card-icon" role="img" aria-label="Bank Icon">🚀</span>
+                <h2 class="text-xl font-semibold mb-2">Statement Analyzer</h2>
+                <p class="text-gray-500 text-sm">Upload bank statement for insights and analysis.</p>
+            </a>
+            <a href="/invoicing-project/money_insights.html" class="card">
+                <span class="card-icon" role="img" aria-label="Money Insights Icon">📊</span>
+                <h2 class="text-xl font-semibold mb-2">Money Insights</h2>
+                <p class="text-gray-500 text-sm">Get actionable financial recommendations and trends.</p>
+            </a>
+        </main>
     </div>
-
-    <!-- Dashboard (shown after authentication) -->
-    <div id="dashboard" class="dashboard hidden">
-        <div class="user-info">
-            <div class="user-avatar"></div>
-            <div class="user-name">Loading...</div>
-            <div class="user-email">Loading...</div>
-        </div>
-        
-        <h2>Welcome to Billwise Dashboard</h2>
-        <p>You're successfully authenticated! This is where your invoicing dashboard would be.</p>
-        
-        <button id="logoutBtn" class="btn-logout">Sign Out</button>
-    </div>
-
-    <!-- Firebase SDK -->
-    <script type="module">
-        // Firebase Configuration
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword,
-            signInWithPopup,
-            GoogleAuthProvider,
-            signOut,
-            onAuthStateChanged,
-            updateProfile
-        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-
-        // Replace with your Firebase config
-        const firebaseConfig = {
-            // Add your Firebase configuration here
-            apiKey: "demo-key",
-            authDomain: "demo-project.firebaseapp.com",
-            projectId: "demo-project",
-            storageBucket: "demo-project.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:demo-app-id"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const googleProvider = new GoogleAuthProvider();
-
-        // DOM Elements
-        const authContainer = document.getElementById('authContainer');
-        const dashboard = document.getElementById('dashboard');
-        const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        const authMessage = document.getElementById('authMessage');
-        const showRegisterLink = document.getElementById('showRegister');
-        const showLoginLink = document.getElementById('showLogin');
-        const googleSignInBtn = document.getElementById('googleSignIn');
-        const googleSignUpBtn = document.getElementById('googleSignUp');
-        const logoutBtn = document.getElementById('logoutBtn');
-
-        // Authentication state listener
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                showDashboard(user);
-            } else {
-                showAuthForm();
-            }
-        });
-
-        // Form switching
-        showRegisterLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginForm.classList.add('hidden');
-            registerForm.classList.remove('hidden');
-            clearMessage();
-        });
-
-        showLoginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            registerForm.classList.add('hidden');
-            loginForm.classList.remove('hidden');
-            clearMessage();
-        });
-
-        // Login form handler
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-
-            try {
-                showLoading('Signing in...');
-                await signInWithEmailAndPassword(auth, email, password);
-                showMessage('Login successful!', 'success');
-            } catch (error) {
-                showMessage(getErrorMessage(error.code), 'error');
-            } finally {
-                hideLoading();
-            }
-        });
-
-        // Register form handler
-        registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-
-            try {
-                showLoading('Creating account...');
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                
-                if (name) {
-                    await updateProfile(userCredential.user, { displayName: name });
-                }
-                
-                showMessage('Account created successfully!', 'success');
-            } catch (error) {
-                showMessage(getErrorMessage(error.code), 'error');
-            } finally {
-                hideLoading();
-            }
-        });
-
-        // Google sign in handlers
-        googleSignInBtn.addEventListener('click', () => signInWithGoogle());
-        googleSignUpBtn.addEventListener('click', () => signInWithGoogle());
-
-        async function signInWithGoogle() {
-            try {
-                showLoading('Signing in with Google...');
-                await signInWithPopup(auth, googleProvider);
-                showMessage('Google sign-in successful!', 'success');
-            } catch (error) {
-                if (error.code !== 'auth/popup-closed-by-user') {
-                    showMessage(getErrorMessage(error.code), 'error');
-                }
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // Logout handler
-        logoutBtn.addEventListener('click', async () => {
-            try {
-                await signOut(auth);
-                showMessage('Signed out successfully!', 'success');
-            } catch (error) {
-                showMessage('Error signing out', 'error');
-            }
-        });
-
-        // UI Helper Functions
-        function showDashboard(user) {
-            authContainer.classList.add('hidden');
-            dashboard.classList.remove('hidden');
-            
-            // Update user info
-            const userAvatar = dashboard.querySelector('.user-avatar');
-            const userName = dashboard.querySelector('.user-name');
-            const userEmail = dashboard.querySelector('.user-email');
-            
-            if (user.photoURL) {
-                userAvatar.innerHTML = `<img src="${user.photoURL}" alt="User Avatar" style="width: 100%; height: 100%; border-radius: 50%;">`;
-            } else {
-                const initial = (user.displayName || user.email).charAt(0).toUpperCase();
-                userAvatar.textContent = initial;
-            }
-            
-            userName.textContent = user.displayName || user.email.split('@')[0];
-            userEmail.textContent = user.email;
-        }
-
-        function showAuthForm() {
-            dashboard.classList.add('hidden');
-            authContainer.classList.remove('hidden');
-        }
-
-        function showMessage(message, type = 'info') {
-            authMessage.textContent = message;
-            authMessage.className = `auth-message ${type}`;
-            authMessage.classList.remove('hidden');
-
-            setTimeout(() => {
-                authMessage.classList.add('hidden');
-            }, 5000);
-        }
-
-        function clearMessage() {
-            authMessage.classList.add('hidden');
-        }
-
-        function showLoading(message = 'Loading...') {
-            const submitButtons = document.querySelectorAll('button[type="submit"]');
-            submitButtons.forEach(btn => {
-                btn.disabled = true;
-                btn.dataset.originalText = btn.textContent;
-                btn.textContent = message;
-            });
-        }
-
-        function hideLoading() {
-            const submitButtons = document.querySelectorAll('button[type="submit"]');
-            submitButtons.forEach(btn => {
-                btn.disabled = false;
-                btn.textContent = btn.dataset.originalText || btn.textContent;
-            });
-        }
-
-        function getErrorMessage(errorCode) {
-            const errorMessages = {
-                'auth/user-not-found': 'No account found with this email.',
-                'auth/wrong-password': 'Incorrect password.',
-                'auth/email-already-in-use': 'Email already registered.',
-                'auth/weak-password': 'Password should be at least 6 characters.',
-                'auth/invalid-email': 'Invalid email address.',
-                'auth/too-many-requests': 'Too many attempts. Try again later.',
-                'auth/popup-closed-by-user': 'Sign-in cancelled.',
-                'auth/invalid-credential': 'Invalid email or password.'
-            };
-            return errorMessages[errorCode] || 'An error occurred. Please try again.';
-        }
-    </script>
 </body>
 </html>
