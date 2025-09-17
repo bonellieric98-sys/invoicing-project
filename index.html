@@ -1,193 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script type="module" src="js/firebase-auth.js"></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homepage</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
-        }
-        .card {
-            background-color: #ffffff;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            padding: 2rem;
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-        .card-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        .settings-button {
-            width: 3rem;
-            height: 3rem;
-            background-color: #ffffff;
-            border-radius: 50%;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            z-index: 10;
-        }
-        .settings-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-        .settings-icon {
-            font-size: 1.25rem;
-        }
-        
-        /* Authentication styles - keeping your design intact */
-        .user-avatar {
-            width: 2.5rem;
-            height: 2.5rem;
-            background-color: #3b82f6;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 1rem;
-            margin-left: 0.5rem;
-        }
-        
-        .user-info {
-            position: fixed;
-            top: 2rem;
-            left: 2rem;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            background-color: #ffffff;
-            border-radius: 2rem;
-            padding: 0.5rem 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        
-        .logout-btn {
-            background-color: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
-            margin-left: 1rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: background-color 0.2s;
-        }
-        
-        .logout-btn:hover {
-            background-color: #dc2626;
-        }
-        
-        .welcome-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 60vh;
-            text-align: center;
-        }
-        
-        .login-btn {
-            background-color: #3b82f6;
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 0.75rem;
-            text-decoration: none;
-            font-weight: 600;
-            margin-top: 2rem;
-            transition: background-color 0.2s;
-        }
-        
-        .login-btn:hover {
-            background-color: #2563eb;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Billwise Invoicing</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1D4ED8, #10B981);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .auth-container {
+      max-width: 420px;
+      width: 100%;
+      padding: 2.5rem;
+      background: #ffffff;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    .text-center h1 {
+      color: #1D4ED8;
+      margin-bottom: 0.25rem;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .text-center p {
+      color: #6B7280;
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+
+    .auth-tabs {
+      display: flex;
+      margin-bottom: 1.5rem;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #E5E7EB;
+    }
+
+    .tab-button {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      background: #F9FAFB;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .tab-button.active {
+      background: #1D4ED8;
+      color: #ffffff;
+    }
+
+    .auth-form {
+      display: none;
+    }
+
+    .auth-form.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #D1D5DB;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: #1D4ED8;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(29,78,216,0.2);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 0.85rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 1rem;
+      transition: transform 0.2s, background 0.3s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: #10B981;
+      color: white;
+    }
+
+    .btn-google {
+      background: #DB4437;
+      color: white;
+    }
+
+    .text-center a {
+      color: #1D4ED8;
+      font-size: 0.9rem;
+      text-decoration: none;
+    }
+
+    .text-center a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
-<body class="p-8">
-    <!-- User Info (Top Left) - Only shown when authenticated -->
-    <div class="user-info auth-required" style="display: none;">
-        <span class="text-sm font-medium">Welcome, <span class="user-name">User</span></span>
-        <div class="user-avatar">U</div>
-        <button class="logout-btn">Logout</button>
+<body>
+  <div class="auth-container">
+    <div class="text-center">
+      <h1>Billwise</h1>
+      <p>Know your numbers, grow your business. </p>
     </div>
 
-    <!-- Account Settings Button (Top Right) - Only shown when authenticated -->
-    <a href="/invoicing-project/user_profile.html" class="settings-button auth-required" style="display: none;">
-        <span class="settings-icon" role="img" aria-label="Account Settings">⚙️</span>
-    </a>
-
-    <!-- Main Dashboard Content - Only shown when authenticated -->
-    <div class="max-w-4xl mx-auto auth-required" style="display: none;">
-        <header class="text-center mb-12">
-            <h1 class="text-4xl font-bold mb-2">BillWise</h1>
-            <p class="text-gray-500">Know your numbers, grow your business.</p>
-        </header>
-        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <a href="/invoicing-project/invoice_tracker.html" class="card">
-                <span class="card-icon" role="img" aria-label="Invoice Icon">📄</span>
-                <h2 class="text-xl font-semibold mb-2">Invoices</h2>
-                <p class="text-gray-500 text-sm">Create and track client invoices.</p>
-            </a>
-            <a href="/invoicing-project/expense_tracker.html" class="card">
-                <span class="card-icon" role="img" aria-label="Expenses Icon">💸</span>
-                <h2 class="text-xl font-semibold mb-2">Forecast Expenses</h2>
-                <p class="text-gray-500 text-sm">Log and track business expenses.</p>
-            </a>
-            <a href="/invoicing-project/profitability_report.html" class="card">
-                <span class="card-icon" role="img" aria-label="Profit Icon">📈</span>
-                <h2 class="text-xl font-semibold mb-2">Live Profitability Tracker</h2>
-                <p class="text-gray-500 text-sm">View live profit impact.</p>
-            </a>
-            <a href="/invoicing-project/client_database.html" class="card">
-                <span class="card-icon" role="img" aria-label="Client Icon">👥</span>
-                <h2 class="text-xl font-semibold mb-2">Clients Database</h2>
-                <p class="text-gray-500 text-sm">Manage your client database.</p>
-            </a>
-             <a href="/invoicing-project/bank_statement_analyzer.html" class="card">
-                <span class="card-icon" role="img" aria-label="Bank Icon">🚀</span>
-                <h2 class="text-xl font-semibold mb-2">Statement Analyzer</h2>
-                <p class="text-gray-500 text-sm">Upload bank statement for insights and analysis.</p>
-            </a>
-            <a href="/invoicing-project/money_insights.html" class="card">
-                <span class="card-icon" role="img" aria-label="Money Insights Icon">📊</span>
-                <h2 class="text-xl font-semibold mb-2">Money Insights</h2>
-                <p class="text-gray-500 text-sm">Get actionable financial recommendations and trends.</p>
-            </a>
-        </main>
+    <div class="auth-tabs">
+      <button class="tab-button active" onclick="switchTab('login')">Login</button>
+      <button class="tab-button" onclick="switchTab('register')">Register</button>
     </div>
 
-    <!-- Welcome Section - Only shown when NOT authenticated -->
-    <div class="max-w-4xl mx-auto auth-hidden welcome-section">
-        <header class="text-center">
-            <h1 class="text-4xl font-bold mb-2">BillWise</h1>
-            <p class="text-gray-500 mb-4">Know your numbers, grow your business.</p>
-            <h2 class="text-2xl font-semibold mb-4">Please sign in to access your dashboard</h2>
-            <p class="text-gray-600 mb-8">Secure access to your invoices, expenses, and financial insights.</p>
-            <a href="login.html" class="login-btn">Sign In to Continue</a>
-        </header>
-    </div>
+    <!-- Login Form -->
+    <form class="auth-form active" id="loginForm">
+      <div class="form-group">
+        <label for="loginEmail">Email Address</label>
+        <input type="email" id="loginEmail" required>
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Sign In</button>
+      <button type="button" class="btn btn-google google-signin">Sign in with Google</button>
+    </form>
+
+    <!-- Register Form -->
+    <form class="auth-form" id="registerForm">
+      <div class="form-group">
+        <label for="registerName">Full Name</label>
+        <input type="text" id="registerName" required>
+      </div>
+      <div class="form-group">
+        <label for="registerEmail">Email Address</label>
+        <input type="email" id="registerEmail" required>
+      </div>
+      <div class="form-group">
+        <label for="registerPassword">Password</label>
+        <input type="password" id="registerPassword" minlength="6" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Create Account</button>
+    </form>
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(tab + 'Form').classList.add('active');
+    }
+  </script>
+  <script type="module" src="js/firebase-auth.js"></script>
 </body>
 </html>
