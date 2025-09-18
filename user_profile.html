@@ -135,7 +135,7 @@
 
             // Safely get user information with fallbacks
             const email = user.email || 'No email available';
-            const displayName = user.displayName || email.split('@')[0] || 'User';
+            const displayName = user.displayName || (user.email ? user.email.split('@')[0] : null) || 'User';
             const uid = user.uid || 'No ID';
 
             // Update user avatar with safe string handling
@@ -143,12 +143,17 @@
             if (user.photoURL) {
                 avatarEl.innerHTML = `<img src="${user.photoURL}" alt="User Avatar" class="w-full h-full object-cover rounded-full">`;
             } else {
-                // Safe way to get first character
+                // Safe way to get first character with extra null checks
                 let initial = 'U';
-                if (displayName && displayName.length > 0) {
-                    initial = displayName.charAt(0).toUpperCase();
-                } else if (email && email.length > 0) {
-                    initial = email.charAt(0).toUpperCase();
+                try {
+                    if (displayName && typeof displayName === 'string' && displayName.length > 0) {
+                        initial = displayName.charAt(0).toUpperCase();
+                    } else if (email && typeof email === 'string' && email.length > 0) {
+                        initial = email.charAt(0).toUpperCase();
+                    }
+                } catch (charError) {
+                    console.error('Error getting initial:', charError);
+                    initial = 'U';
                 }
                 avatarEl.textContent = initial;
             }
