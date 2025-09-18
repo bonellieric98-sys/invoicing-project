@@ -154,25 +154,27 @@
             document.getElementById('loading').innerHTML = '<p class="text-red-500">Failed to initialize Firebase</p>';
         }
 
-        // Load user statistics from Firestore
+        // Load user statistics from Firestore (optimized)
         async function loadUserStats() {
             if (!currentUser) return;
 
+            // Show loading indicators
+            document.getElementById('invoices-count').textContent = '...';
+            document.getElementById('expenses-count').textContent = '...';
+            document.getElementById('bank-analyses-count').textContent = '...';
+
             try {
-                // Count invoices
-                const invoicesQuery = query(collection(db, "invoices"), where("user_id", "==", currentUser.uid));
-                const invoicesSnapshot = await getDocs(invoicesQuery);
-                document.getElementById('invoices-count').textContent = invoicesSnapshot.size;
+                // Run all queries in parallel for better performance
+                const [invoicesSnapshot, expensesSnapshot, bankSnapshot] = await Promise.all([
+                    getDocs(query(collection(db, "invoices"), where("user_id", "==", currentUser.uid))).catch(() => ({ size: 0 })),
+                    getDocs(query(collection(db, "expenses"), where("user_id", "==", currentUser.uid))).catch(() => ({ size: 0 })),
+                    getDocs(query(collection(db, "bank_analyses"), where("user_id", "==", currentUser.uid))).catch(() => ({ size: 0 }))
+                ]);
 
-                // Count expenses
-                const expensesQuery = query(collection(db, "expenses"), where("user_id", "==", currentUser.uid));
-                const expensesSnapshot = await getDocs(expensesQuery);
-                document.getElementById('expenses-count').textContent = expensesSnapshot.size;
-
-                // Count bank analyses
-                const bankQuery = query(collection(db, "bank_analyses"), where("user_id", "==", currentUser.uid));
-                const bankSnapshot = await getDocs(bankQuery);
-                document.getElementById('bank-analyses-count').textContent = bankSnapshot.size;
+                // Update counts
+                document.getElementById('invoices-count').textContent = invoicesSnapshot.size || '0';
+                document.getElementById('expenses-count').textContent = expensesSnapshot.size || '0';
+                document.getElementById('bank-analyses-count').textContent = bankSnapshot.size || '0';
 
             } catch (error) {
                 console.error("Error loading user stats:", error);
@@ -278,15 +280,15 @@
                 if (user) {
                     console.log('User authenticated:', user.email);
                     
-                    // Update profile information
+                    // Update profile information immediately
                     updateUserProfile(user);
                     
-                    // Load user statistics
-                    await loadUserStats();
-
-                    // Show profile content and hide loading
+                    // Show profile content and hide loading immediately
                     document.getElementById('loading').classList.add('hidden');
                     document.getElementById('profile-content').classList.remove('hidden');
+                    
+                    // Load statistics in the background (don't block UI)
+                    loadUserStats();
                     
                 } else {
                     // User is not authenticated - redirect to login
