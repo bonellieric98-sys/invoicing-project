@@ -364,13 +364,39 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="registerName">Full Name</label>
-                    <input type="text" id="registerName" required>
+                    <label for="registerFirstName">First Name</label>
+                    <input type="text" id="registerFirstName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerLastName">Last Name</label>
+                    <input type="text" id="registerLastName" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="registerEmail">Email Address</label>
                     <input type="email" id="registerEmail" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerBusinessName">Business Name</label>
+                    <input type="text" id="registerBusinessName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerPhone">Phone Number</label>
+                    <input type="tel" id="registerPhone" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerTier">Membership Tier</label>
+                    <select id="registerTier" required style="width: 100%; padding: 15px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 1rem; transition: border-color 0.3s ease;">
+                        <option value="">Select a plan</option>
+                        <option value="free">Free Tier - $0/month</option>
+                        <option value="starter">Starter - $29/month</option>
+                        <option value="professional">Professional - $79/month</option>
+                        <option value="enterprise">Enterprise - $199/month</option>
+                    </select>
                 </div>
                 
                 <div class="form-group">
@@ -407,15 +433,15 @@
 
     <!-- Firebase SDK -->
     <script type="module">
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        // TODO: Replace with your Firebase configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyD9SrWqQVL0_GxfBISBBezUOqQMbE_fiRU",
-            authDomain: "invoicing-platform-f29ac.firebaseapp.com",
-            projectId: "invoicing-platform-f29ac",
-            storageBucket: "invoicing-platform-f29ac.firebasestorage.app",
-            messagingSenderId: "632172765378",
-            appId: "1:632172765378:web:072134627a2226ddab9b5b",
-            measurementId: "G-NSK0H0SQBE"
+            // REPLACE THESE VALUES WITH YOUR ACTUAL FIREBASE CONFIG
+            apiKey: "your-actual-api-key",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "your-app-id"
         };
 
         // Import Firebase modules
@@ -431,13 +457,19 @@
             updateProfile,
             connectAuthEmulator
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc 
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         // Initialize Firebase
-        let app, auth, googleProvider;
+        let app, auth, googleProvider, db;
 
         try {
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
+            db = getFirestore(app);
             googleProvider = new GoogleAuthProvider();
             
             // Optional: Add additional scopes for Google provider
@@ -521,16 +553,20 @@
         registerForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            if (!auth) {
+            if (!auth || !db) {
                 showMessage('Authentication not initialized. Please check Firebase configuration.', 'error');
                 return;
             }
 
-            const name = document.getElementById('registerName').value.trim();
+            const firstName = document.getElementById('registerFirstName').value.trim();
+            const lastName = document.getElementById('registerLastName').value.trim();
             const email = document.getElementById('registerEmail').value.trim();
+            const businessName = document.getElementById('registerBusinessName').value.trim();
+            const phone = document.getElementById('registerPhone').value.trim();
+            const membershipTier = document.getElementById('registerTier').value;
             const password = document.getElementById('registerPassword').value;
 
-            if (!name || !email || !password) {
+            if (!firstName || !lastName || !email || !businessName || !phone || !membershipTier || !password) {
                 showMessage('Please fill in all fields.', 'error');
                 return;
             }
@@ -542,15 +578,36 @@
 
             try {
                 showLoading('registerForm', 'Creating account...');
+                
+                // Create the user account
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
                 
-                // Update user profile with display name
-                if (name) {
-                    await updateProfile(userCredential.user, { displayName: name });
-                }
+                // Update Firebase Auth profile with display name
+                const fullName = `${firstName} ${lastName}`;
+                await updateProfile(user, { displayName: fullName });
                 
-                console.log('Registration successful:', userCredential.user.email);
-                showMessage('Account created successfully!', 'success');
+                // Create user profile document in Firestore
+                const userProfile = {
+                    uid: user.uid,
+                    firstName: firstName,
+                    lastName: lastName,
+                    fullName: fullName,
+                    email: email,
+                    businessName: businessName,
+                    phone: phone,
+                    membershipTier: membershipTier,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    isActive: true
+                };
+
+                // Save user profile to Firestore
+                await setDoc(doc(db, 'users', user.uid), userProfile);
+                
+                console.log('Registration successful:', user.email);
+                showMessage('Account created successfully! Welcome to Billwise!', 'success');
+                
             } catch (error) {
                 console.error('Registration error:', error);
                 showMessage(getErrorMessage(error.code), 'error');
@@ -592,19 +649,7 @@
             }
         }
 
-        // Logout handler
-        logoutBtn?.addEventListener('click', async () => {
-            if (!auth) return;
-
-            try {
-                await signOut(auth);
-                console.log('Logout successful');
-                showMessage('Signed out successfully!', 'success');
-            } catch (error) {
-                console.error('Logout error:', error);
-                showMessage('Error signing out', 'error');
-            }
-        });
+        // Note: Logout functionality should be handled on your dashboard (index.html)
 
         // UI Helper Functions
         function showDashboard(user) {
