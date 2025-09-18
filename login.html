@@ -118,12 +118,18 @@
             margin-bottom: 15px;
         }
 
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
@@ -138,7 +144,7 @@
             gap: 10px;
         }
 
-        .btn-google:hover {
+        .btn-google:hover:not(:disabled) {
             border-color: #db4437;
             background: #db4437;
             color: white;
@@ -237,6 +243,13 @@
             color: white;
             font-size: 2rem;
             font-weight: bold;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .user-name {
@@ -259,10 +272,26 @@
             cursor: pointer;
             font-size: 1rem;
             margin-top: 20px;
+            transition: background 0.3s ease;
         }
 
         .btn-logout:hover {
             background: #c82333;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
@@ -304,7 +333,9 @@
                     <input type="password" id="loginPassword" required>
                 </div>
                 
-                <button type="submit" class="btn btn-primary">Sign In</button>
+                <button type="submit" class="btn btn-primary">
+                    <span class="btn-text">Sign In</span>
+                </button>
                 
                 <div class="divider">
                     <span>or</span>
@@ -347,7 +378,9 @@
                     <input type="password" id="registerPassword" minlength="6" required>
                 </div>
                 
-                <button type="submit" class="btn btn-primary">Create Account</button>
+                <button type="submit" class="btn btn-primary">
+                    <span class="btn-text">Create Account</span>
+                </button>
                 
                 <div class="divider">
                     <span>or</span>
@@ -370,23 +403,22 @@
         </div>
     </div>
 
-    <!-- Dashboard (shown after authentication) -->
-    <div id="dashboard" class="dashboard hidden">
-        <div class="user-info">
-            <div class="user-avatar"></div>
-            <div class="user-name">Loading...</div>
-            <div class="user-email">Loading...</div>
-        </div>
-        
-        <h2>Welcome to Billwise Dashboard</h2>
-        <p>You're successfully authenticated! This is where your invoicing dashboard would be.</p>
-        
-        <button id="logoutBtn" class="btn-logout">Sign Out</button>
-    </div>
+    <!-- Dashboard section removed since you have your own index.html -->
 
     <!-- Firebase SDK -->
     <script type="module">
-        // Firebase Configuration
+        // TODO: Replace with your Firebase configuration
+        const firebaseConfig = {
+            // REPLACE THESE VALUES WITH YOUR ACTUAL FIREBASE CONFIG
+            apiKey: "your-actual-api-key",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "your-app-id"
+        };
+
+        // Import Firebase modules
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
             getAuth, 
@@ -396,28 +428,30 @@
             GoogleAuthProvider,
             signOut,
             onAuthStateChanged,
-            updateProfile
+            updateProfile,
+            connectAuthEmulator
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-        // Replace with your Firebase config
-        const firebaseConfig = {
-            // Add your Firebase configuration here
-            apiKey: "demo-key",
-            authDomain: "demo-project.firebaseapp.com",
-            projectId: "demo-project",
-            storageBucket: "demo-project.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:demo-app-id"
-        };
-
         // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const googleProvider = new GoogleAuthProvider();
+        let app, auth, googleProvider;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            googleProvider = new GoogleAuthProvider();
+            
+            // Optional: Add additional scopes for Google provider
+            googleProvider.addScope('profile');
+            googleProvider.addScope('email');
+
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+            showMessage('Firebase configuration error. Please check your settings.', 'error');
+        }
 
         // DOM Elements
         const authContainer = document.getElementById('authContainer');
-        const dashboard = document.getElementById('dashboard');
         const loginForm = document.getElementById('loginForm');
         const registerForm = document.getElementById('registerForm');
         const authMessage = document.getElementById('authMessage');
@@ -425,26 +459,28 @@
         const showLoginLink = document.getElementById('showLogin');
         const googleSignInBtn = document.getElementById('googleSignIn');
         const googleSignUpBtn = document.getElementById('googleSignUp');
-        const logoutBtn = document.getElementById('logoutBtn');
 
         // Authentication state listener
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                showDashboard(user);
-            } else {
-                showAuthForm();
-            }
-        });
+        if (auth) {
+            onAuthStateChanged(auth, (user) => {
+                console.log('Auth state changed:', user ? 'User signed in' : 'User signed out');
+                if (user) {
+                    // User is already authenticated, redirect to dashboard
+                    window.location.href = 'index.html';
+                }
+                // If user is not authenticated, stay on login page (no action needed)
+            });
+        }
 
         // Form switching
-        showRegisterLink.addEventListener('click', (e) => {
+        showRegisterLink?.addEventListener('click', (e) => {
             e.preventDefault();
             loginForm.classList.add('hidden');
             registerForm.classList.remove('hidden');
             clearMessage();
         });
 
-        showLoginLink.addEventListener('click', (e) => {
+        showLoginLink?.addEventListener('click', (e) => {
             e.preventDefault();
             registerForm.classList.add('hidden');
             loginForm.classList.remove('hidden');
@@ -452,142 +488,211 @@
         });
 
         // Login form handler
-        loginForm.addEventListener('submit', async (e) => {
+        loginForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
+            
+            if (!auth) {
+                showMessage('Authentication not initialized. Please check Firebase configuration.', 'error');
+                return;
+            }
+
+            const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
 
+            if (!email || !password) {
+                showMessage('Please fill in all fields.', 'error');
+                return;
+            }
+
             try {
-                showLoading('Signing in...');
-                await signInWithEmailAndPassword(auth, email, password);
+                showLoading('loginForm', 'Signing in...');
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log('Login successful:', userCredential.user.email);
                 showMessage('Login successful!', 'success');
             } catch (error) {
+                console.error('Login error:', error);
                 showMessage(getErrorMessage(error.code), 'error');
             } finally {
-                hideLoading();
+                hideLoading('loginForm', 'Sign In');
             }
         });
 
         // Register form handler
-        registerForm.addEventListener('submit', async (e) => {
+        registerForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
+            
+            if (!auth) {
+                showMessage('Authentication not initialized. Please check Firebase configuration.', 'error');
+                return;
+            }
+
+            const name = document.getElementById('registerName').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
             const password = document.getElementById('registerPassword').value;
 
+            if (!name || !email || !password) {
+                showMessage('Please fill in all fields.', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('Password must be at least 6 characters long.', 'error');
+                return;
+            }
+
             try {
-                showLoading('Creating account...');
+                showLoading('registerForm', 'Creating account...');
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 
+                // Update user profile with display name
                 if (name) {
                     await updateProfile(userCredential.user, { displayName: name });
                 }
                 
+                console.log('Registration successful:', userCredential.user.email);
                 showMessage('Account created successfully!', 'success');
             } catch (error) {
+                console.error('Registration error:', error);
                 showMessage(getErrorMessage(error.code), 'error');
             } finally {
-                hideLoading();
+                hideLoading('registerForm', 'Create Account');
             }
         });
 
         // Google sign in handlers
-        googleSignInBtn.addEventListener('click', () => signInWithGoogle());
-        googleSignUpBtn.addEventListener('click', () => signInWithGoogle());
+        googleSignInBtn?.addEventListener('click', () => signInWithGoogle());
+        googleSignUpBtn?.addEventListener('click', () => signInWithGoogle());
 
         async function signInWithGoogle() {
+            if (!auth || !googleProvider) {
+                showMessage('Google authentication not available. Please check Firebase configuration.', 'error');
+                return;
+            }
+
             try {
-                showLoading('Signing in with Google...');
-                await signInWithPopup(auth, googleProvider);
+                showLoading('googleSignIn', 'Signing in...');
+                showLoading('googleSignUp', 'Signing up...');
+                
+                const result = await signInWithPopup(auth, googleProvider);
+                console.log('Google sign-in successful:', result.user.email);
                 showMessage('Google sign-in successful!', 'success');
             } catch (error) {
-                if (error.code !== 'auth/popup-closed-by-user') {
+                console.error('Google sign-in error:', error);
+                
+                if (error.code === 'auth/popup-closed-by-user') {
+                    showMessage('Sign-in cancelled.', 'info');
+                } else if (error.code === 'auth/popup-blocked') {
+                    showMessage('Pop-up blocked. Please allow pop-ups for this site.', 'error');
+                } else {
                     showMessage(getErrorMessage(error.code), 'error');
                 }
             } finally {
-                hideLoading();
+                hideLoading('googleSignIn', 'Continue with Google');
+                hideLoading('googleSignUp', 'Sign up with Google');
             }
         }
 
         // Logout handler
-        logoutBtn.addEventListener('click', async () => {
+        logoutBtn?.addEventListener('click', async () => {
+            if (!auth) return;
+
             try {
                 await signOut(auth);
+                console.log('Logout successful');
                 showMessage('Signed out successfully!', 'success');
             } catch (error) {
+                console.error('Logout error:', error);
                 showMessage('Error signing out', 'error');
             }
         });
 
         // UI Helper Functions
         function showDashboard(user) {
-            authContainer.classList.add('hidden');
-            dashboard.classList.remove('hidden');
-            
-            // Update user info
-            const userAvatar = dashboard.querySelector('.user-avatar');
-            const userName = dashboard.querySelector('.user-name');
-            const userEmail = dashboard.querySelector('.user-email');
-            
-            if (user.photoURL) {
-                userAvatar.innerHTML = `<img src="${user.photoURL}" alt="User Avatar" style="width: 100%; height: 100%; border-radius: 50%;">`;
-            } else {
-                const initial = (user.displayName || user.email).charAt(0).toUpperCase();
-                userAvatar.textContent = initial;
-            }
-            
-            userName.textContent = user.displayName || user.email.split('@')[0];
-            userEmail.textContent = user.email;
+            // Instead of showing the dashboard here, redirect to your existing index.html
+            console.log('User authenticated, redirecting to dashboard...');
+            window.location.href = 'index.html';
         }
 
         function showAuthForm() {
-            dashboard.classList.add('hidden');
-            authContainer.classList.remove('hidden');
+            // Always show the auth form on login page
+            authContainer?.classList.remove('hidden');
         }
 
         function showMessage(message, type = 'info') {
+            if (!authMessage) return;
+
             authMessage.textContent = message;
             authMessage.className = `auth-message ${type}`;
             authMessage.classList.remove('hidden');
 
-            setTimeout(() => {
-                authMessage.classList.add('hidden');
-            }, 5000);
+            // Auto-hide success and info messages
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    authMessage.classList.add('hidden');
+                }, 5000);
+            }
         }
 
         function clearMessage() {
-            authMessage.classList.add('hidden');
+            authMessage?.classList.add('hidden');
         }
 
-        function showLoading(message = 'Loading...') {
-            const submitButtons = document.querySelectorAll('button[type="submit"]');
-            submitButtons.forEach(btn => {
-                btn.disabled = true;
-                btn.dataset.originalText = btn.textContent;
-                btn.textContent = message;
-            });
+        function showLoading(formId, message = 'Loading...') {
+            const form = document.getElementById(formId);
+            if (!form) return;
+
+            const submitBtn = form.querySelector('button[type="submit"]') || document.getElementById(formId);
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                const btnText = submitBtn.querySelector('.btn-text') || submitBtn;
+                if (!submitBtn.dataset.originalText) {
+                    submitBtn.dataset.originalText = btnText.textContent;
+                }
+                btnText.innerHTML = `<span class="loading-spinner"></span>${message}`;
+            }
         }
 
-        function hideLoading() {
-            const submitButtons = document.querySelectorAll('button[type="submit"]');
-            submitButtons.forEach(btn => {
-                btn.disabled = false;
-                btn.textContent = btn.dataset.originalText || btn.textContent;
-            });
+        function hideLoading(formId, originalText) {
+            const form = document.getElementById(formId);
+            if (!form) return;
+
+            const submitBtn = form.querySelector('button[type="submit"]') || document.getElementById(formId);
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                const btnText = submitBtn.querySelector('.btn-text') || submitBtn;
+                btnText.textContent = submitBtn.dataset.originalText || originalText;
+            }
         }
 
         function getErrorMessage(errorCode) {
             const errorMessages = {
-                'auth/user-not-found': 'No account found with this email.',
-                'auth/wrong-password': 'Incorrect password.',
-                'auth/email-already-in-use': 'Email already registered.',
-                'auth/weak-password': 'Password should be at least 6 characters.',
-                'auth/invalid-email': 'Invalid email address.',
-                'auth/too-many-requests': 'Too many attempts. Try again later.',
+                'auth/user-not-found': 'No account found with this email address.',
+                'auth/wrong-password': 'Incorrect password. Please try again.',
+                'auth/email-already-in-use': 'An account with this email already exists.',
+                'auth/weak-password': 'Password should be at least 6 characters long.',
+                'auth/invalid-email': 'Please enter a valid email address.',
+                'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
                 'auth/popup-closed-by-user': 'Sign-in cancelled.',
-                'auth/invalid-credential': 'Invalid email or password.'
+                'auth/popup-blocked': 'Pop-up blocked. Please allow pop-ups for this site.',
+                'auth/invalid-credential': 'Invalid email or password.',
+                'auth/network-request-failed': 'Network error. Please check your connection.',
+                'auth/internal-error': 'An internal error occurred. Please try again.',
+                'auth/invalid-api-key': 'Invalid Firebase API key configuration.',
+                'auth/app-deleted': 'Firebase app has been deleted.',
+                'auth/app-not-authorized': 'App not authorized to use Firebase Authentication.',
+                'auth/argument-error': 'Invalid configuration. Please check your Firebase setup.',
+                'auth/invalid-user-token': 'User token has expired. Please sign in again.',
+                'auth/user-disabled': 'This account has been disabled.',
+                'auth/user-token-expired': 'Session expired. Please sign in again.',
+                'auth/web-storage-unsupported': 'Your browser does not support local storage.'
             };
-            return errorMessages[errorCode] || 'An error occurred. Please try again.';
+            return errorMessages[errorCode] || 'An unexpected error occurred. Please try again.';
+        }
+
+        // Development helper
+        if (firebaseConfig.apiKey === "your-actual-api-key") {
+            console.warn('⚠️ Firebase configuration not set up. Please replace the configuration values with your actual Firebase project settings.');
+            showMessage('Firebase configuration needed. Please check the console for instructions.', 'error');
         }
     </script>
 </body>
