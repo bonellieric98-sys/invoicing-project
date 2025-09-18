@@ -21,23 +21,23 @@
             <p class="mt-2 text-gray-500">Loading profile...</p>
         </div>
 
-        <!-- Profile Content (hidden initially) -->
+        <!-- Profile Content -->
         <div id="profile-content" class="hidden">
             <header class="flex justify-between items-center mb-10 border-b pb-6 border-gray-200">
-                <a href="/invoicing-project/index.html" class="flex items-center text-gray-500 hover:text-indigo-600 transition-colors">
+                <a href="index.html" class="flex items-center text-gray-500 hover:text-indigo-600 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
                     </svg>
                     <span class="font-medium">Back to Home</span>
                 </a>
                 <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 flex-grow text-center">User Profile</h1>
-                <a href="/invoicing-project/edit_profile.html" class="text-indigo-600 hover:text-indigo-800 font-semibold transition-colors">Edit Profile</a>
+                <div class="w-20"></div>
             </header>
             
             <div class="flex flex-col md:flex-row items-center md:items-start space-y-8 md:space-y-0 md:space-x-12">
                 <div class="flex-shrink-0">
                     <div id="user-avatar" class="w-32 h-32 md:w-40 md:h-40 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg text-white text-6xl font-bold">
-                        <!-- Avatar will be populated by JavaScript -->
+                        U
                     </div>
                 </div>
                 
@@ -45,7 +45,7 @@
                     <div class="space-y-6">
                         <div>
                             <h2 class="text-2xl font-bold text-gray-800" id="user-name">Loading...</h2>
-                            <p class="text-gray-500 text-lg" id="business-name">Professional Account</p>
+                            <p class="text-gray-500 text-lg" id="business-name">BillWise User</p>
                         </div>
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
@@ -55,7 +55,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-500">User ID</label>
-                                <p class="mt-1 text-gray-700 font-semibold text-lg font-mono text-sm" id="user-id">Loading...</p>
+                                <p class="mt-1 text-gray-700 font-mono text-sm" id="user-id">Loading...</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-500">Account Created</label>
@@ -77,32 +77,10 @@
                             </div>
                         </div>
 
-                        <!-- User Statistics -->
-                        <div class="mt-8 border-t pt-6">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Account Statistics</h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div class="bg-blue-50 p-4 rounded-lg text-center">
-                                    <p class="text-2xl font-bold text-blue-600" id="invoices-count">0</p>
-                                    <p class="text-sm text-gray-600">Invoices Created</p>
-                                </div>
-                                <div class="bg-green-50 p-4 rounded-lg text-center">
-                                    <p class="text-2xl font-bold text-green-600" id="expenses-count">0</p>
-                                    <p class="text-sm text-gray-600">Expenses Logged</p>
-                                </div>
-                                <div class="bg-purple-50 p-4 rounded-lg text-center">
-                                    <p class="text-2xl font-bold text-purple-600" id="bank-analyses-count">0</p>
-                                    <p class="text-sm text-gray-600">Bank Analyses</p>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Account Actions -->
                         <div class="mt-8 border-t pt-6">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4">Account Actions</h3>
                             <div class="flex flex-wrap gap-4">
-                                <button onclick="refreshStats()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
-                                    Refresh Statistics
-                                </button>
                                 <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
                                     Sign Out
                                 </button>
@@ -114,6 +92,7 @@
         </div>
     </div>
 
+    <!-- Firebase Authentication -->
     <script type="module">
         // Firebase configuration
         const firebaseConfig = {
@@ -133,141 +112,103 @@
             onAuthStateChanged,
             signOut
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { 
-            getFirestore, 
-            collection, 
-            query, 
-            where, 
-            getDocs 
-        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         // Initialize Firebase
-        let app, auth, db;
+        let app, auth;
         let currentUser = null;
 
         try {
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
-            db = getFirestore(app);
+            console.log('Firebase initialized successfully');
         } catch (error) {
             console.error('Firebase initialization error:', error);
             document.getElementById('loading').innerHTML = '<p class="text-red-500">Failed to initialize Firebase</p>';
         }
 
-        // Load user statistics from Firestore (optimized)
-        async function loadUserStats() {
-            if (!currentUser) return;
-
-            // Show loading indicators
-            document.getElementById('invoices-count').textContent = '...';
-            document.getElementById('expenses-count').textContent = '...';
-            document.getElementById('bank-analyses-count').textContent = '...';
-
-            try {
-                // Run all queries in parallel for better performance
-                const [invoicesSnapshot, expensesSnapshot, bankSnapshot] = await Promise.all([
-                    getDocs(query(collection(db, "invoices"), where("user_id", "==", currentUser.uid))).catch(() => ({ size: 0 })),
-                    getDocs(query(collection(db, "expenses"), where("user_id", "==", currentUser.uid))).catch(() => ({ size: 0 })),
-                    getDocs(query(collection(db, "bank_analyses"), where("user_id", "==", currentUser.uid))).catch(() => ({ size: 0 }))
-                ]);
-
-                // Update counts
-                document.getElementById('invoices-count').textContent = invoicesSnapshot.size || '0';
-                document.getElementById('expenses-count').textContent = expensesSnapshot.size || '0';
-                document.getElementById('bank-analyses-count').textContent = bankSnapshot.size || '0';
-
-            } catch (error) {
-                console.error("Error loading user stats:", error);
-                // Set default values on error
-                document.getElementById('invoices-count').textContent = '0';
-                document.getElementById('expenses-count').textContent = '0';
-                document.getElementById('bank-analyses-count').textContent = '0';
-            }
-        }
-
-        // Update user profile information
+        // Update user profile information with safe null checks
         function updateUserProfile(user) {
+            if (!user) return;
+            
             currentUser = user;
+            console.log('Updating profile for user:', user);
 
-            // Update user avatar
+            // Safely get user information with fallbacks
+            const email = user.email || 'No email available';
+            const displayName = user.displayName || email.split('@')[0] || 'User';
+            const uid = user.uid || 'No ID';
+
+            // Update user avatar with safe string handling
             const avatarEl = document.getElementById('user-avatar');
             if (user.photoURL) {
                 avatarEl.innerHTML = `<img src="${user.photoURL}" alt="User Avatar" class="w-full h-full object-cover rounded-full">`;
             } else {
-                const initial = (user.displayName || user.email).charAt(0).toUpperCase();
+                // Safe way to get first character
+                let initial = 'U';
+                if (displayName && displayName.length > 0) {
+                    initial = displayName.charAt(0).toUpperCase();
+                } else if (email && email.length > 0) {
+                    initial = email.charAt(0).toUpperCase();
+                }
                 avatarEl.textContent = initial;
             }
 
-            // Update user name
-            const displayName = user.displayName || user.email.split('@')[0] || 'User';
+            // Update user information
             document.getElementById('user-name').textContent = displayName;
+            document.getElementById('user-email').textContent = email;
+            document.getElementById('user-id').textContent = uid.substring(0, 12) + '...';
 
-            // Update email
-            document.getElementById('user-email').textContent = user.email || 'No email available';
+            // Update dates with safe handling
+            try {
+                if (user.metadata && user.metadata.creationTime) {
+                    const creationDate = new Date(user.metadata.creationTime);
+                    document.getElementById('account-created').textContent = creationDate.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                } else {
+                    document.getElementById('account-created').textContent = 'Not available';
+                }
 
-            // Update user ID (show first 12 characters)
-            document.getElementById('user-id').textContent = user.uid ? user.uid.substring(0, 12) + '...' : 'No ID';
-
-            // Update account creation date
-            const creationTime = user.metadata.creationTime;
-            if (creationTime) {
-                const date = new Date(creationTime);
-                document.getElementById('account-created').textContent = date.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-            } else {
+                if (user.metadata && user.metadata.lastSignInTime) {
+                    const signInDate = new Date(user.metadata.lastSignInTime);
+                    document.getElementById('last-sign-in').textContent = signInDate.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                } else {
+                    document.getElementById('last-sign-in').textContent = 'Not available';
+                }
+            } catch (dateError) {
+                console.error('Error formatting dates:', dateError);
                 document.getElementById('account-created').textContent = 'Not available';
-            }
-
-            // Update last sign in
-            const lastSignInTime = user.metadata.lastSignInTime;
-            if (lastSignInTime) {
-                const date = new Date(lastSignInTime);
-                document.getElementById('last-sign-in').textContent = date.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-            } else {
                 document.getElementById('last-sign-in').textContent = 'Not available';
             }
 
-            // Determine authentication method
+            // Determine authentication method safely
             let authMethod = 'Email/Password';
-            if (user.providerData && user.providerData.length > 0) {
-                const provider = user.providerData[0].providerId;
-                if (provider === 'google.com') {
-                    authMethod = 'Google';
-                } else if (provider === 'facebook.com') {
-                    authMethod = 'Facebook';
-                } else if (provider === 'twitter.com') {
-                    authMethod = 'Twitter';
+            try {
+                if (user.providerData && user.providerData.length > 0) {
+                    const provider = user.providerData[0].providerId;
+                    if (provider === 'google.com') {
+                        authMethod = 'Google';
+                    } else if (provider === 'facebook.com') {
+                        authMethod = 'Facebook';
+                    }
                 }
+            } catch (providerError) {
+                console.error('Error determining auth method:', providerError);
             }
             document.getElementById('auth-method').textContent = authMethod;
         }
 
-        // Global functions
-        window.refreshStats = async function() {
-            const button = event.target;
-            const originalText = button.textContent;
-            button.textContent = 'Refreshing...';
-            button.disabled = true;
-
-            await loadUserStats();
-
-            setTimeout(() => {
-                button.textContent = originalText;
-                button.disabled = false;
-            }, 1000);
-        };
-
+        // Global logout function
         window.logout = async function() {
             try {
                 await signOut(auth);
-                // Redirect will happen automatically via auth state listener
+                window.location.href = 'login.html';
             } catch (error) {
                 console.error('Logout error:', error);
                 alert('Error signing out. Please try again.');
@@ -276,19 +217,16 @@
 
         // Authentication state listener
         if (auth) {
-            onAuthStateChanged(auth, async (user) => {
+            onAuthStateChanged(auth, (user) => {
                 if (user) {
                     console.log('User authenticated:', user.email);
                     
-                    // Update profile information immediately
+                    // Update profile information
                     updateUserProfile(user);
                     
-                    // Show profile content and hide loading immediately
+                    // Show profile content and hide loading
                     document.getElementById('loading').classList.add('hidden');
                     document.getElementById('profile-content').classList.remove('hidden');
-                    
-                    // Load statistics in the background (don't block UI)
-                    loadUserStats();
                     
                 } else {
                     // User is not authenticated - redirect to login
