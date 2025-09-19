@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div id="app-container" class="container mx-auto p-4 md:p-8">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4 md:mb-0">Pipeline Tracker</h1>
+            <div class="flex items-center space-x-2 md:space-x-4">
+                <input
+                    type="text"
+                    id="search-input"
+                    placeholder="Search opportunities..."
+                    class="px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm w-40 md:w-64"
+                />
+                <button
+                    id="add-opportunity-btn"
+                    class="bg-blue-600 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 transition duration-300 shadow-lg transform hover:scale-105 text-xs md:text-sm"
+                >
+                    Add Opportunity
+                </button>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 mr-4">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Active Pipeline</p>
+                        <p id="active-count" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 mr-4">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Pipeline Value</p>
+                        <p id="pipeline-value" class="text-2xl font-bold text-gray-900">$0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 mr-4">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Won</p>
+                        <p id="won-count" class="text-2xl font-bold text-green-600">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-red-100 mr-4">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Lost</p>
+                        <p id="lost-count" class="text-2xl font-bold text-red-600">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content: Table -->
+        <div class="overflow-x-auto bg-white rounded-2xl shadow-xl mb-8">
+            <table class="w-full table-auto">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-key="opportunityName">Opportunity Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-key="clientName">Client</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-key="segment">Segment</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-key="projectValue">Project Value</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-key="winProbability">Win Probability</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-key="status">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="opportunities-tbody" class="divide-y divide-gray-200">
+                    <!-- Table rows will be inserted here by JavaScript -->
+                </tbody>
+            </table>
+             <p id="no-data-message" class="text-center text-gray-500 py-8 hidden">No opportunities yet. Add one to get started!</p>
+        </div>
+         <div id="loading-indicator" class="text-center text-gray-500 py-8">Loading opportunities...</div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-xl">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Pipeline Value by Segment</h3>
+                <canvas id="segmentChart" width="400" height="300"></canvas>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-xl">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Win Rate Analysis</h3>
+                <canvas id="winRateChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-xl">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Monthly Pipeline Trend</h3>
+            <canvas id="trendChart" width="800" height="300"></canvas>
+        </div>
+    </div>
+
+    <!-- Modal for Add/Edit Form -->
+    <div id="form-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 hidden opacity-0">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-lg m-4 transform transition-transform duration-300 scale-95">
+            <h2 id="modal-title" class="text-2xl font-bold mb-6">New Opportunity</h2>
+            <form id="opportunity-form">
+                <input type="hidden" id="opportunity-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input class="p-3 border rounded-lg" type="text" id="opportunityName" placeholder="Opportunity Name" required />
+                    <input class="p-3 border rounded-lg" type="text" id="clientName" placeholder="Client Name" required />
+                    <select class="p-3 border rounded-lg bg-white" id="segment">
+                        <option>New Business</option>
+                        <option>Existing Business</option>
+                        <option>Upsell</option>
+                        <option>Renewal</option>
+                    </select>
+                    <input class="p-3 border rounded-lg" type="number" id="projectValue" placeholder="Project Value ($)" required />
+                    <div class="md:col-span-2">
+                        <label for="winProbability" class="block text-sm font-medium text-gray-700">Win Probability: <span id="win-probability-value">50</span>%</label>
+                        <input type="range" min="0" max="100" id="winProbability" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+                    </div>
+                    <textarea class="md:col-span-2 p-3 border rounded-lg" id="description" placeholder="Description/Comments"></textarea>
+                </div>
+                <div class="flex justify-end mt-6 space-x-4">
+                    <button type="button" id="cancel-btn" class="px-6 py-2 rounded-full text-gray-600 border hover:bg-gray-100">Cancel</button>
+                    <button type="submit" id="submit-btn" class="px-6 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Custom Confirm Modal for Deletion -->
+    <div id="confirm-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 hidden opacity-0">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm m-4 transform transition-transform duration-300 scale-95">
+            <h3 class="text-lg font-bold mb-4">Confirm Deletion</h3>
+            <p class="text-gray-600 mb-6">Are you sure you want to delete this opportunity?</p>
+            <div class="flex justify-end space-x-4">
+                <button id="confirm-cancel-btn" class="px-6 py-2 rounded-full text-gray-600 border hover:bg-gray-100">Cancel</button>
+                <button id="confirm-delete-btn" class="px-6 py-2 rounded-full bg-red-600 text-white hover:bg-red-700">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD9SrWqQVL0_GxfBISBBezUOqQMbE_fiRU",
+            authDomain: "invoicing-platform-f29ac.firebaseapp.com",
+            projectId: "invoicing-platform-f29ac",
+            storageBucket: "invoicing-platform-f29ac.firebasestorage.app",
+            messagingSenderId: "632172765378",
+            appId: "1:632172765378:web:072134627a2226ddab9b5b",
+            measurementId: "G-NSK0H0SQBE"
+        };
+        
+        // --- App State ---
+        let db;
+        let auth;
+        let opportunities = [];
+        let sortConfig = { key: 'opportunityName', direction: 'ascending' };
+        let user = null;
+        let charts = {};
+
+        // --- DOM Elements ---
+        const tbody = document.getElementById('opportunities-tbody');
+        const searchInput = document.getElementById('search-input');
+        const formModal = document.getElementById('form-modal');
+        const opportunityForm = document.getElementById('opportunity-form');
+        const modalTitle = document.getElementById('modal-title');
+        const submitBtn = document.getElementById('submit-btn');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const noDataMessage = document.getElementById('no-data-message');
+        const confirmModal = document.getElementById('confirm-modal');
+        let deleteId = null;
+
+        // --- Initialization ---
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            setLogLevel('debug');
+
+            signInAnonymously(auth).catch(error => console.error("Anonymous sign-in failed:", error));
+            onAuthStateChanged(auth, (currentUser) => {
+                if(currentUser){
+                    user = currentUser;
+                    console.log("User signed in:", user.uid);
+                    subscribeToOpportunities();
+                } else {
+                    user = null;
+                    opportunities = [];
+                    render();
+                    updateCharts();
+                }
+            });
+
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            loadingIndicator.textContent = "Error connecting to the database.";
+        }
+        
+        // --- Data Fetching ---
+        function subscribeToOpportunities() {
+            if (!user || !db) return;
+            const opportunitiesCollection = collection(db, 'opportunities');
+            onSnapshot(opportunitiesCollection, (snapshot) => {
+                opportunities = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                loadingIndicator.classList.add('hidden');
+                render();
+                updateSummaryCards();
+                updateCharts();
+            }, (error) => {
+                console.error("Error fetching opportunities:", error);
+                loadingIndicator.textContent = "Failed to load data.";
+            });
+        }
+
+        // --- Summary Cards ---
+        function updateSummaryCards() {
+            const activeOpps = opportunities.filter(opp => opp.status === 'active' || !opp.status);
+            const wonOpps = opportunities.filter(opp => opp.status === 'won');
+            const lostOpps = opportunities.filter(opp => opp.status === 'lost');
+            
+            document.getElementById('active-count').textContent = activeOpps.length;
+            document.getElementById('won-count').textContent = wonOpps.length;
+            document.getElementById('lost-count').textContent = lostOpps.length;
+            
+            const pipelineValue = activeOpps.reduce((sum, opp) => sum + (opp.projectValue || 0), 0);
+            document.getElementById('pipeline-value').textContent = `$${pipelineValue.toLocaleString()}`;
+        }
+
+        // --- Charts ---
+        function updateCharts() {
+            updateSegmentChart();
+            updateWinRateChart();
+            updateTrendChart();
+        }
+
+        function updateSegmentChart() {
+            const ctx = document.getElementById('segmentChart').getContext('2d');
+            
+            if (charts.segment) {
+                charts.segment.destroy();
+            }
+
+            const activeOpps = opportunities.filter(opp => opp.status === 'active' || !opp.status);
+            const segmentData = {};
+            
+            activeOpps.forEach(opp => {
+                const segment = opp.segment || 'Unknown';
+                segmentData[segment] = (segmentData[segment] || 0) + (opp.projectValue || 0);
+            });
+
+            charts.segment = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(segmentData),
+                    datasets: [{
+                        data: Object.values(segmentData),
+                        backgroundColor: [
+                            '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateWinRateChart() {
+            const ctx = document.getElementById('winRateChart').getContext('2d');
+            
+            if (charts.winRate) {
+                charts.winRate.destroy();
+            }
+
+            const wonOpps = opportunities.filter(opp => opp.status === 'won');
+            const lostOpps = opportunities.filter(opp => opp.status === 'lost');
+            const activeOpps = opportunities.filter(opp => opp.status === 'active' || !opp.status);
+
+            charts.winRate = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Won', 'Lost', 'Active'],
+                    datasets: [{
+                        label: 'Count',
+                        data: [wonOpps.length, lostOpps.length, activeOpps.length],
+                        backgroundColor: ['#10B981', '#EF4444', '#3B82F6'],
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTrendChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            if (charts.trend) {
+                charts.trend.destroy();
+            }
+
+            // Create monthly data for the last 6 months
+            const months = [];
+            const activeData = [];
+            const wonData = [];
+            const lostData = [];
+
+            for (let i = 5; i >= 0; i--) {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                const monthYear = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                months.push(monthYear);
+
+                // For demo purposes, we'll use random data since we don't have date tracking
+                // In a real app, you'd filter by creation/update dates
+                const activeCount = Math.floor(Math.random() * 10) + opportunities.filter(o => o.status === 'active' || !o.status).length / 6;
+                const wonCount = Math.floor(Math.random() * 5) + opportunities.filter(o => o.status === 'won').length / 6;
+                const lostCount = Math.floor(Math.random() * 3) + opportunities.filter(o => o.status === 'lost').length / 6;
+
+                activeData.push(activeCount);
+                wonData.push(wonCount);
+                lostData.push(lostCount);
+            }
+
+            charts.trend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Active',
+                            data: activeData,
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Won',
+                            data: wonData,
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Lost',
+                            data: lostData,
+                            borderColor: '#EF4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Rendering ---
+        function getProbabilityColorClass(probability) {
+            if (probability <= 30) return 'bg-red-600';
+            if (probability >= 80) return 'bg-green-600';
+            return 'bg-yellow-500';
+        }
+
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'won':
+                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Won</span>';
+                case 'lost':
+                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Lost</span>';
+                default:
+                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Active</span>';
+            }
+        }
+
+        function render() {
+            tbody.innerHTML = ''; // Clear existing rows
+            
+            // Only show active opportunities in the main table
+            const activeOpportunities = opportunities.filter(opp => opp.status === 'active' || !opp.status);
+            noDataMessage.classList.toggle('hidden', activeOpportunities.length > 0);
+
+            const searchTerm = searchInput.value.toLowerCase();
+            let filteredOpportunities = activeOpportunities.filter(op =>
+                Object.values(op).some(val =>
+                    String(val).toLowerCase().includes(searchTerm)
+                )
+            );
+
+            // Sorting
+            filteredOpportunities.sort((a, b) => {
+                const valA = a[sortConfig.key];
+                const valB = b[sortConfig.key];
+                if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
+                if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
+                return 0;
+            });
+            
+            updateSortHeaders();
+
+            filteredOpportunities.forEach(opp => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition duration-150';
+                const probColorClass = getProbabilityColorClass(opp.winProbability);
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="font-medium text-gray-900">${opp.opportunityName}</div>
+                        <div class="text-sm text-gray-500">${opp.description || ''}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${opp.clientName}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${opp.segment}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$${Number(opp.projectValue).toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="${probColorClass} h-2.5 rounded-full" style="width: ${opp.winProbability}%"></div>
+                            </div>
+                            <span class="ml-3 text-sm font-medium">${opp.winProbability}%</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">${getStatusBadge(opp.status)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="text-indigo-600 hover:text-indigo-900 edit-btn mr-2" data-id="${opp.id}">Edit</button>
+                        <button class="text-green-600 hover:text-green-900 won-btn mr-2" data-id="${opp.id}">Won</button>
+                        <button class="text-red-600 hover:text-red-900 lost-btn mr-2" data-id="${opp.id}">Lost</button>
+                        <button class="text-red-600 hover:text-red-900 delete-btn" data-id="${opp.id}">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function updateSortHeaders() {
+             document.querySelectorAll('th[data-sort-key]').forEach(th => {
+                const key = th.dataset.sortKey;
+                th.innerHTML = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                if (sortConfig.key === key) {
+                    th.innerHTML += sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
+                }
+             });
+        }
+
+        // --- Event Listeners ---
+        searchInput.addEventListener('input', render);
+        
+        document.querySelector('thead').addEventListener('click', (e) => {
+            const key = e.target.dataset.sortKey;
+            if (!key) return;
+
+            const direction = sortConfig.key === key && sortConfig.direction === 'ascending' ? 'descending' : 'ascending';
+            sortConfig = { key, direction };
+            render();
+        });
+
+        tbody.addEventListener('click', e => {
+            const id = e.target.dataset.id;
+            
+            if (e.target.classList.contains('edit-btn')) {
+                const opp = opportunities.find(o => o.id === id);
+                openModal(opp);
+            }
+            if (e.target.classList.contains('delete-btn')) {
+                deleteId = id;
+                openConfirmModal();
+            }
+            if (e.target.classList.contains('won-btn')) {
+                updateOpportunityStatus(id, 'won');
+            }
+            if (e.target.classList.contains('lost-btn')) {
+                updateOpportunityStatus(id, 'lost');
+            }
+        });
+
+        opportunityForm.addEventListener('submit', handleFormSubmit);
+        document.getElementById('add-opportunity-btn').addEventListener('click', () => openModal());
+        document.getElementById('cancel-btn').addEventListener('click', closeModal);
+        document.getElementById('winProbability').addEventListener('input', e => {
+            document.getElementById('win-probability-value').textContent = e.target.value;
+        });
+
+        // --- Status Updates ---
+        async function updateOpportunityStatus(id, status) {
+            if (!db) return;
+            
+            try {
+                const oppRef = doc(db, 'opportunities', id);
+                await updateDoc(oppRef, { status: status });
+            } catch (error) {
+                console.error("Error updating status: ", error);
+            }
+        }
+
+        // --- Modal Handling ---
+        function openModal(opportunity = null) {
+            opportunityForm.reset();
+            document.getElementById('win-probability-value').textContent = '50';
+            if (opportunity) {
+                modalTitle.textContent = 'Edit Opportunity';
+                submitBtn.textContent = 'Update';
+                document.getElementById('opportunity-id').value = opportunity.id;
+                document.getElementById('opportunityName').value = opportunity.opportunityName;
+                document.getElementById('clientName').value = opportunity.clientName;
+                document.getElementById('segment').value = opportunity.segment;
+                document.getElementById('projectValue').value = opportunity.projectValue;
+                document.getElementById('winProbability').value = opportunity.winProbability;
+                document.getElementById('win-probability-value').textContent = opportunity.winProbability;
+                document.getElementById('description').value = opportunity.description || '';
+            } else {
+                modalTitle.textContent = 'New Opportunity';
+                submitBtn.textContent = 'Add';
+                document.getElementById('opportunity-id').value = '';
+            }
+            
+            formModal.classList.remove('hidden');
+            setTimeout(() => {
+                formModal.classList.remove('opacity-0');
+                formModal.querySelector('div').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            formModal.classList.add('opacity-0');
+            formModal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => formModal.classList.add('hidden'), 300);
+        }
+
+        // --- CRUD Operations ---
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            if (!db) return;
+
+            const id = document.getElementById('opportunity-id').value;
+            const data = {
+                opportunityName: document.getElementById('opportunityName').value,
+                clientName: document.getElementById('clientName').value,
+                segment: document.getElementById('segment').value,
+                projectValue: Number(document.getElementById('projectValue').value),
+                winProbability: Number(document.getElementById('winProbability').value),
+                description: document.getElementById('description').value,
+                status: 'active' // Default status for new opportunities
+            };
+            
+            // Basic validation
+            if (!data.opportunityName || !data.clientName || !data.projectValue || data.projectValue <= 0) {
+                 console.error("Validation failed: Please fill all required fields and ensure project value is positive.");
+                 return;
+            }
+
+            try {
+                if (id) { // Update
+                    const oppRef = doc(db, 'opportunities', id);
+                    // Don't overwrite status when editing
+                    delete data.status;
+                    await updateDoc(oppRef, data);
+                } else { // Add
+                    await addDoc(collection(db, 'opportunities'), data);
+                }
+                closeModal();
+            } catch (error) {
+                console.error("Error saving document: ", error);
+            }
+        }
+        
+        // --- Deletion Confirmation ---
+        function openConfirmModal() {
+            confirmModal.classList.remove('hidden');
+            setTimeout(() => {
+                confirmModal.classList.remove('opacity-0');
+                confirmModal.querySelector('div').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeConfirmModal() {
+            confirmModal.classList.add('opacity-0');
+            confirmModal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => {
+                confirmModal.classList.add('hidden');
+                deleteId = null;
+            }, 300);
+        }
+
+        document.getElementById('confirm-cancel-btn').addEventListener('click', closeConfirmModal);
+        document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+            if (deleteId && db) {
+                 try {
+                    await deleteDoc(doc(db, 'opportunities', deleteId));
+                } catch (error) {
+                    console.error("Error deleting document: ", error);
+                } finally {
+                    closeConfirmModal();
+                }
+            }
+        });
+
+    </script>
+
+</body>
+</html>
