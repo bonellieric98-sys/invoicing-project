@@ -68,14 +68,29 @@
             </div>
             <div class="flex items-center space-x-2">
                 <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                <span class="text-sm text-gray-500">AI Analysis Active</span>
+                <span class="text-sm text-gray-500">Gemini AI Analysis Active</span>
+            </div>
+        </div>
+
+        <!-- API Key Missing Alert -->
+        <div id="api-key-alert" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Gemini API Key Required</h3>
+                    <p class="mt-1 text-sm text-red-700">Please set your Gemini API key in localStorage to enable AI insights. You can get one from Google AI Studio.</p>
+                </div>
             </div>
         </div>
 
         <!-- Loading State -->
         <div id="loading" class="text-center py-12">
             <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-            <p class="mt-4 text-gray-500">Analyzing your financial data...</p>
+            <p class="mt-4 text-gray-500">Analyzing your financial data with Gemini AI...</p>
         </div>
 
         <!-- Main Content -->
@@ -84,12 +99,12 @@
             <div class="insight-card mb-8 relative z-10">
                 <div class="flex items-start justify-between">
                     <div>
-                        <h2 class="text-xl font-bold mb-2">💡 AI Recommendation</h2>
+                        <h2 class="text-xl font-bold mb-2">🤖 Gemini AI Recommendation</h2>
                         <p id="ai-insight" class="text-lg leading-relaxed">
-                            Based on your financial patterns, I've identified key opportunities to optimize your cash flow.
+                            Analyzing your financial patterns to provide personalized insights...
                         </p>
                     </div>
-                    <div class="text-4xl opacity-20">🤖</div>
+                    <div class="text-4xl opacity-20">🧠</div>
                 </div>
             </div>
 
@@ -97,23 +112,23 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="metric-card text-center">
                     <h3 class="text-lg font-semibold text-gray-700 mb-2">Financial Health Score</h3>
-                    <div class="text-4xl font-bold text-indigo-600 mb-2" id="health-score">85</div>
+                    <div class="text-4xl font-bold text-indigo-600 mb-2" id="health-score">--</div>
                     <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" id="health-bar" style="width: 85%"></div>
+                        <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" id="health-bar" style="width: 0%"></div>
                     </div>
-                    <p class="text-sm text-gray-500 mt-2">Good financial position</p>
+                    <p class="text-sm text-gray-500 mt-2" id="health-description">Calculating...</p>
                 </div>
-                
+
                 <div class="metric-card text-center">
                     <h3 class="text-lg font-semibold text-gray-700 mb-2">Cash Flow Trend</h3>
-                    <div class="text-2xl font-bold trend-up mb-2" id="cash-flow-trend">+12.5%</div>
+                    <div class="text-2xl font-bold trend-neutral mb-2" id="cash-flow-trend">--</div>
                     <p class="text-sm text-gray-500">vs last period</p>
                 </div>
-                
+
                 <div class="metric-card text-center">
                     <h3 class="text-lg font-semibold text-gray-700 mb-2">Expense Efficiency</h3>
-                    <div class="text-2xl font-bold trend-neutral mb-2" id="expense-efficiency">78%</div>
-                    <p class="text-sm text-gray-500">Room for improvement</p>
+                    <div class="text-2xl font-bold trend-neutral mb-2" id="expense-efficiency">--</div>
+                    <p class="text-sm text-gray-500" id="efficiency-description">Analyzing...</p>
                 </div>
             </div>
 
@@ -124,16 +139,16 @@
                     <h3 class="text-xl font-semibold text-gray-800 mb-4">📊 Revenue Insights</h3>
                     <div class="space-y-4">
                         <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                            <span class="text-sm font-medium">Peak Revenue Day</span>
-                            <span class="text-sm text-green-600 font-bold" id="peak-day">Wednesdays</span>
+                            <span class="text-sm font-medium">Total Revenue</span>
+                            <span class="text-sm text-green-600 font-bold" id="total-revenue">$--</span>
                         </div>
                         <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                            <span class="text-sm font-medium">Average Invoice Value</span>
-                            <span class="text-sm text-blue-600 font-bold" id="avg-invoice">$1,245</span>
+                            <span class="text-sm font-medium">Average Transaction</span>
+                            <span class="text-sm text-blue-600 font-bold" id="avg-transaction">$--</span>
                         </div>
                         <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                            <span class="text-sm font-medium">Payment Speed</span>
-                            <span class="text-sm text-purple-600 font-bold" id="payment-speed">18 days avg</span>
+                            <span class="text-sm font-medium">Revenue Growth</span>
+                            <span class="text-sm text-purple-600 font-bold" id="revenue-growth">--%</span>
                         </div>
                     </div>
                 </div>
@@ -143,59 +158,47 @@
                     <h3 class="text-xl font-semibold text-gray-800 mb-4">💳 Expense Insights</h3>
                     <div class="space-y-4">
                         <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-                            <span class="text-sm font-medium">Highest Category</span>
-                            <span class="text-sm text-red-600 font-bold" id="top-expense">Office Supplies (32%)</span>
+                            <span class="text-sm font-medium">Total Expenses</span>
+                            <span class="text-sm text-red-600 font-bold" id="total-expenses">$--</span>
                         </div>
                         <div class="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
-                            <span class="text-sm font-medium">Monthly Trend</span>
-                            <span class="text-sm text-yellow-600 font-bold" id="expense-trend">+5.2% increase</span>
+                            <span class="text-sm font-medium">Largest Category</span>
+                            <span class="text-sm text-yellow-600 font-bold" id="largest-category">--</span>
                         </div>
                         <div class="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                            <span class="text-sm font-medium">Optimization Potential</span>
-                            <span class="text-sm text-orange-600 font-bold" id="optimization">$340/month</span>
+                            <span class="text-sm font-medium">Expense Ratio</span>
+                            <span class="text-sm text-orange-600 font-bold" id="expense-ratio">--%</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Recommendations -->
+            <!-- AI Recommendations -->
             <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">🎯 AI Recommendations</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="border-l-4 border-green-500 pl-4 py-2">
-                        <h4 class="font-semibold text-green-700">Increase Profit Margin</h4>
-                        <p class="text-sm text-gray-600" id="profit-rec">Consider raising invoice rates by 8-12% based on your payment reliability.</p>
-                    </div>
-                    <div class="border-l-4 border-blue-500 pl-4 py-2">
-                        <h4 class="font-semibold text-blue-700">Optimize Cash Flow</h4>
-                        <p class="text-sm text-gray-600" id="cashflow-rec">Implement 2/10 net 30 payment terms to improve cash collection.</p>
-                    </div>
-                    <div class="border-l-4 border-purple-500 pl-4 py-2">
-                        <h4 class="font-semibold text-purple-700">Reduce Expenses</h4>
-                        <p class="text-sm text-gray-600" id="expense-rec">Switch to annual subscriptions for software to save 15-20%.</p>
-                    </div>
-                    <div class="border-l-4 border-orange-500 pl-4 py-2">
-                        <h4 class="font-semibold text-orange-700">Growth Opportunity</h4>
-                        <p class="text-sm text-gray-600" id="growth-rec">Your best clients pay 40% faster - focus marketing on similar profiles.</p>
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">🎯 Gemini AI Recommendations</h3>
+                <div id="ai-recommendations" class="space-y-4">
+                    <div class="animate-pulse">
+                        <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-1/2"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Forecast -->
             <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-md p-6 text-white">
-                <h3 class="text-xl font-semibold mb-4">🔮 30-Day Forecast</h3>
+                <h3 class="text-xl font-semibold mb-4">🔮 AI-Powered 30-Day Forecast</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="text-center">
                         <p class="text-sm opacity-80">Projected Revenue</p>
-                        <p class="text-2xl font-bold" id="forecast-revenue">$8,450</p>
+                        <p class="text-2xl font-bold" id="forecast-revenue">$--</p>
                     </div>
                     <div class="text-center">
                         <p class="text-sm opacity-80">Expected Expenses</p>
-                        <p class="text-2xl font-bold" id="forecast-expenses">$3,200</p>
+                        <p class="text-2xl font-bold" id="forecast-expenses">$--</p>
                     </div>
                     <div class="text-center">
                         <p class="text-sm opacity-80">Net Profit</p>
-                        <p class="text-2xl font-bold" id="forecast-profit">$5,250</p>
+                        <p class="text-2xl font-bold" id="forecast-profit">$--</p>
                     </div>
                 </div>
             </div>
@@ -220,154 +223,202 @@
         let db, auth;
         let user_id = null;
 
-        // AI Insights based on user data patterns
-        const aiInsights = [
-            "Based on your invoice patterns, clients who pay within 15 days tend to have 23% higher repeat business rates.",
-            "Your expense-to-revenue ratio is optimized, but switching to quarterly payments could improve cash flow by 18%.",
-            "Analysis shows your most profitable service generates 3x more revenue per hour than your standard offerings.",
-            "Your seasonal revenue peaks in Q3 - consider building cash reserves during high-earning months.",
-            "Late payment reminders sent on Tuesdays have 67% higher response rates based on your data.",
-            "Your bank statement analysis reveals opportunities to reduce transaction fees by consolidating payments."
-        ];
+        // Check for Gemini API key
+        function getGeminiApiKey() {
+            return localStorage.getItem('geminiApiKey');
+        }
 
-        function generateInsights(invoices, expenses, bankAnalyses) {
-            // Calculate real metrics from user data
-            const paidInvoices = invoices.filter(inv => inv.status === 'Paid');
-            const unpaidInvoices = invoices.filter(inv => inv.status === 'Unpaid' || inv.status === 'Pending');
-            
-            const totalRevenue = paidInvoices.reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
-            const totalOutstanding = unpaidInvoices.reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
-            const totalExpenses = expenses.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
-            
-            // Add bank analysis data
-            const totalBankDeposits = bankAnalyses.reduce((sum, analysis) => sum + (parseFloat(analysis.revenue) || 0), 0);
-            const totalBankWithdrawals = bankAnalyses.reduce((sum, analysis) => sum + (parseFloat(analysis.expenses) || 0), 0);
-            
-            const netProfit = (totalRevenue + totalBankDeposits) - (totalExpenses + totalBankWithdrawals);
-            const totalAllRevenue = totalRevenue + totalBankDeposits;
-            const totalAllExpenses = totalExpenses + totalBankWithdrawals;
-            
-            // Calculate health score based on real data
-            let healthScore = 30; // Base score
-            if (netProfit > 0) healthScore += 40;
-            if (totalAllRevenue > totalAllExpenses * 1.5) healthScore += 20;
-            if (invoices.length > 3) healthScore += 10;
-            if (totalOutstanding / Math.max(totalAllRevenue, 1) < 0.3) healthScore += 10; // Low outstanding ratio
-            healthScore = Math.min(100, Math.max(0, healthScore));
-            
+        // Call Gemini API for financial analysis
+        async function analyzeWithGemini(financialData) {
+            const apiKey = getGeminiApiKey();
+            if (!apiKey) {
+                throw new Error('Gemini API key not found in localStorage');
+            }
+
+            const prompt = `You are a financial analyst AI. Analyze the following financial data and provide insights in JSON format.
+
+Financial Data:
+- Total Revenue: $${financialData.totalRevenue}
+- Total Expenses: $${financialData.totalExpenses}
+- Total Deposits: $${financialData.totalDeposits}
+- Total Withdrawals: $${financialData.totalWithdrawals}
+- Net Profit: $${financialData.netProfit}
+- Number of Revenue Transactions: ${financialData.revenueCount}
+- Number of Expense Transactions: ${financialData.expenseCount}
+- Expense Categories: ${JSON.stringify(financialData.expenseCategories)}
+- Monthly Trend: ${financialData.monthlyTrend}
+
+Please respond with a JSON object containing:
+{
+  "healthScore": number (0-100),
+  "healthDescription": string,
+  "cashFlowTrend": string (e.g., "+15.2%"),
+  "cashFlowDirection": string ("up", "down", or "neutral"),
+  "expenseEfficiency": number (0-100),
+  "efficiencyDescription": string,
+  "avgTransaction": number,
+  "revenueGrowth": string (e.g., "+12.5%"),
+  "largestCategory": string,
+  "expenseRatio": string (e.g., "45%"),
+  "mainInsight": string (1-2 sentences),
+  "recommendations": [
+    {
+      "title": string,
+      "description": string,
+      "color": string ("green", "blue", "purple", "orange")
+    }
+  ],
+  "forecast": {
+    "revenue": number,
+    "expenses": number,
+    "profit": number
+  }
+}
+
+Focus on actionable insights and be specific about the numbers provided.`;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Gemini API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const content = data.candidates[0].content.parts[0].text;
+
+                // Extract JSON from the response
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) {
+                    throw new Error('No valid JSON found in Gemini response');
+                }
+
+                return JSON.parse(jsonMatch[0]);
+            } catch (error) {
+                console.error('Gemini API error:', error);
+                throw error;
+            }
+        }
+
+        // Process and display insights
+        function displayInsights(analysis) {
             // Update health score
-            document.getElementById('health-score').textContent = healthScore;
-            document.getElementById('health-bar').style.width = healthScore + '%';
-            
-            // Update health description
-            let healthDesc = "Poor financial position";
-            if (healthScore >= 80) healthDesc = "Excellent financial position";
-            else if (healthScore >= 60) healthDesc = "Good financial position";
-            else if (healthScore >= 40) healthDesc = "Fair financial position";
-            document.querySelector('.metric-card p').textContent = healthDesc;
-            
-            // Calculate cash flow trend
-            const cashFlowPercent = totalAllRevenue > 0 ? ((netProfit / totalAllRevenue) * 100) : 0;
+            document.getElementById('health-score').textContent = analysis.healthScore;
+            document.getElementById('health-bar').style.width = analysis.healthScore + '%';
+            document.getElementById('health-description').textContent = analysis.healthDescription;
+
+            // Update cash flow trend
             const cashFlowElement = document.getElementById('cash-flow-trend');
-            cashFlowElement.textContent = `${cashFlowPercent >= 0 ? '+' : ''}${cashFlowPercent.toFixed(1)}%`;
-            cashFlowElement.className = cashFlowPercent > 0 ? 'text-2xl font-bold trend-up' : 
-                                       cashFlowPercent < 0 ? 'text-2xl font-bold trend-down' : 
-                                       'text-2xl font-bold trend-neutral';
-            
-            // Calculate expense efficiency
-            const expenseRatio = totalAllRevenue > 0 ? ((totalAllExpenses / totalAllRevenue) * 100) : 0;
-            const efficiency = Math.max(0, 100 - expenseRatio);
-            document.getElementById('expense-efficiency').textContent = `${efficiency.toFixed(0)}%`;
-            
-            // Update revenue insights with real data
-            const avgInvoiceValue = paidInvoices.length > 0 ? (totalRevenue / paidInvoices.length) : 0;
-            document.getElementById('avg-invoice').textContent = `${avgInvoiceValue.toFixed(0)}`;
-            
-            // Calculate days between invoices (simplified)
-            const daysRange = invoices.length > 1 ? Math.ceil(30 / invoices.length) : 30;
-            document.getElementById('payment-speed').textContent = `${daysRange} days avg`;
-            
+            cashFlowElement.textContent = analysis.cashFlowTrend;
+            cashFlowElement.className = `text-2xl font-bold trend-${analysis.cashFlowDirection}`;
+
+            // Update expense efficiency
+            document.getElementById('expense-efficiency').textContent = analysis.expenseEfficiency;
+            document.getElementById('efficiency-description').textContent = analysis.efficiencyDescription;
+
+            // Update revenue insights
+            document.getElementById('avg-transaction').textContent = `$${analysis.avgTransaction.toFixed(0)}`;
+            document.getElementById('revenue-growth').textContent = analysis.revenueGrowth;
+
             // Update expense insights
-            const expensesByCategory = {};
+            document.getElementById('largest-category').textContent = analysis.largestCategory;
+            document.getElementById('expense-ratio').textContent = analysis.expenseRatio;
+
+            // Update main AI insight
+            document.getElementById('ai-insight').textContent = analysis.mainInsight;
+
+            // Update recommendations
+            const recommendationsContainer = document.getElementById('ai-recommendations');
+            recommendationsContainer.innerHTML = '';
+
+            analysis.recommendations.forEach(rec => {
+                const colorMap = {
+                    green: 'border-green-500 text-green-700',
+                    blue: 'border-blue-500 text-blue-700',
+                    purple: 'border-purple-500 text-purple-700',
+                    orange: 'border-orange-500 text-orange-700'
+                };
+
+                const recElement = document.createElement('div');
+                recElement.className = `border-l-4 ${colorMap[rec.color]} pl-4 py-2`;
+                recElement.innerHTML = `
+                    <h4 class="font-semibold">${rec.title}</h4>
+                    <p class="text-sm text-gray-600">${rec.description}</p>
+                `;
+                recommendationsContainer.appendChild(recElement);
+            });
+
+            // Update forecast
+            document.getElementById('forecast-revenue').textContent = `$${analysis.forecast.revenue.toFixed(0)}`;
+            document.getElementById('forecast-expenses').textContent = `$${analysis.forecast.expenses.toFixed(0)}`;
+            document.getElementById('forecast-profit').textContent = `$${analysis.forecast.profit.toFixed(0)}`;
+        }
+
+        // Prepare financial data for analysis
+        function prepareFinancialData(invoices, expenses, bankAnalyses) {
+            const paidInvoices = invoices.filter(inv => inv.status === 'Paid');
+            const totalRevenue = paidInvoices.reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
+            const totalExpenses = expenses.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+
+            const totalDeposits = bankAnalyses.reduce((sum, analysis) => sum + (parseFloat(analysis.revenue) || 0), 0);
+            const totalWithdrawals = bankAnalyses.reduce((sum, analysis) => sum + (parseFloat(analysis.expenses) || 0), 0);
+
+            const netProfit = (totalRevenue + totalDeposits) - (totalExpenses + totalWithdrawals);
+
+            // Calculate expense categories
+            const expenseCategories = {};
             expenses.forEach(expense => {
                 const category = expense.category || 'Other';
-                expensesByCategory[category] = (expensesByCategory[category] || 0) + (parseFloat(expense.amount) || 0);
+                expenseCategories[category] = (expenseCategories[category] || 0) + (parseFloat(expense.amount) || 0);
             });
-            
-            const topCategory = Object.keys(expensesByCategory).reduce((a, b) => 
-                expensesByCategory[a] > expensesByCategory[b] ? a : b, 'Office Supplies'
-            );
-            const topCategoryPercent = totalExpenses > 0 ? 
-                ((expensesByCategory[topCategory] || 0) / totalExpenses * 100) : 0;
-            
-            document.getElementById('top-expense').textContent = `${topCategory} (${topCategoryPercent.toFixed(0)}%)`;
-            
-            // Monthly expense trend (simplified)
-            const expenseTrend = expenses.length > 0 ? 
-                (expenses.length > 10 ? '+8.4%' : expenses.length > 5 ? '+3.2%' : '-2.1%') : '0%';
-            document.getElementById('expense-trend').textContent = `${expenseTrend} vs last month`;
-            
-            // Optimization potential
-            const optimizationPotential = totalAllExpenses * 0.15; // 15% potential savings
-            document.getElementById('optimization').textContent = `${optimizationPotential.toFixed(0)}/month`;
-            
-            // Generate AI insight based on actual data
-            let aiInsight = "";
-            if (healthScore >= 80) {
-                aiInsight = `Your financial health is excellent with ${healthScore}% score. Consider reinvesting ${(netProfit * 0.3).toFixed(0)} into growth opportunities.`;
-            } else if (totalOutstanding > totalRevenue * 0.4) {
-                aiInsight = `You have ${totalOutstanding.toFixed(0)} in outstanding invoices. Follow up on overdue payments to improve cash flow by ${((totalOutstanding / totalAllRevenue) * 100).toFixed(0)}%.`;
-            } else if (expenseRatio > 70) {
-                aiInsight = `Your expense ratio is ${expenseRatio.toFixed(0)}%. Focus on reducing ${topCategory} costs to improve profitability.`;
-            } else if (avgInvoiceValue < 500) {
-                aiInsight = `Your average invoice is ${avgInvoiceValue.toFixed(0)}. Consider bundling services or raising rates to increase average transaction value.`;
-            } else {
-                aiInsight = `Based on your ${invoices.length} invoices and ${expenses.length} expenses, your business shows ${netProfit > 0 ? 'positive' : 'negative'} cash flow trends.`;
-            }
-            
-            document.getElementById('ai-insight').textContent = aiInsight;
-            
-            // Update recommendations based on real data
-            if (totalOutstanding > totalRevenue * 0.3) {
-                document.getElementById('cashflow-rec').textContent = 
-                    `You have high outstanding invoices. Implement automated reminders to reduce collection time by 40%.`;
-            }
-            
-            if (expenseRatio > 60) {
-                document.getElementById('expense-rec').textContent = 
-                    `Your expenses are ${expenseRatio.toFixed(0)}% of revenue. Target reducing ${topCategory} costs first.`;
-            }
-            
-            if (avgInvoiceValue > 0 && avgInvoiceValue < 1000) {
-                document.getElementById('profit-rec').textContent = 
-                    `Your average invoice is ${avgInvoiceValue.toFixed(0)}. Consider 15-20% rate increase for new clients.`;
-            }
-            
-            // Update forecast based on actual data trends
-            const monthlyRevenueTrend = totalAllRevenue > 0 ? totalAllRevenue * 1.15 : 1000; // 15% growth
-            const monthlyExpenseTrend = totalAllExpenses > 0 ? totalAllExpenses * 1.05 : 400; // 5% increase
-            const projectedProfit = monthlyRevenueTrend - monthlyExpenseTrend;
-            
-            document.getElementById('forecast-revenue').textContent = `${monthlyRevenueTrend.toFixed(0)}`;
-            document.getElementById('forecast-expenses').textContent = `${monthlyExpenseTrend.toFixed(0)}`;
-            document.getElementById('forecast-profit').textContent = `${projectedProfit.toFixed(0)}`;
-            
-            // Update peak day based on data patterns (simplified)
-            const peakDays = ['Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays'];
-            const randomPeakDay = peakDays[Math.floor(Math.random() * peakDays.length)];
-            document.getElementById('peak-day').textContent = invoices.length > 0 ? randomPeakDay : 'Not enough data';
+
+            // Update basic metrics
+            document.getElementById('total-revenue').textContent = `$${(totalRevenue + totalDeposits).toFixed(0)}`;
+            document.getElementById('total-expenses').textContent = `$${(totalExpenses + totalWithdrawals).toFixed(0)}`;
+
+            return {
+                totalRevenue: totalRevenue + totalDeposits,
+                totalExpenses: totalExpenses + totalWithdrawals,
+                totalDeposits,
+                totalWithdrawals,
+                netProfit,
+                revenueCount: paidInvoices.length,
+                expenseCount: expenses.length,
+                expenseCategories,
+                monthlyTrend: netProfit > 0 ? 'positive' : 'negative'
+            };
         }
 
         async function loadUserData() {
             if (!user_id) return;
 
             try {
+                // Check for API key
+                const apiKey = getGeminiApiKey();
+                if (!apiKey) {
+                    document.getElementById('api-key-alert').classList.remove('hidden');
+                    document.getElementById('loading').classList.add('hidden');
+                    return;
+                }
+
                 // Load invoices
                 const invoicesQuery = query(collection(db, "invoices"), where("user_id", "==", user_id), limit(50));
                 const invoicesSnapshot = await getDocs(invoicesQuery);
                 const invoices = invoicesSnapshot.docs.map(doc => doc.data());
 
-                // Load expenses  
+                // Load expenses
                 const expensesQuery = query(collection(db, "expenses"), where("user_id", "==", user_id), limit(50));
                 const expensesSnapshot = await getDocs(expensesQuery);
                 const expenses = expensesSnapshot.docs.map(doc => doc.data());
@@ -377,16 +428,25 @@
                 const bankSnapshot = await getDocs(bankQuery);
                 const bankAnalyses = bankSnapshot.docs.map(doc => doc.data());
 
-                // Generate insights
-                generateInsights(invoices, expenses, bankAnalyses);
+                // Prepare data for Gemini
+                const financialData = prepareFinancialData(invoices, expenses, bankAnalyses);
+
+                // Get AI analysis
+                const analysis = await analyzeWithGemini(financialData);
+
+                // Display insights
+                displayInsights(analysis);
 
                 // Show content
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('main-content').classList.remove('hidden');
 
             } catch (error) {
-                console.error("Error loading data:", error);
-                document.getElementById('loading').innerHTML = '<p class="text-red-500">Failed to load insights</p>';
+                console.error("Error loading data or calling Gemini:", error);
+                document.getElementById('loading').innerHTML = `
+                    <p class="text-red-500">Failed to load insights: ${error.message}</p>
+                    <p class="text-sm text-gray-500 mt-2">Make sure your Gemini API key is set in localStorage</p>
+                `;
             }
         }
 
