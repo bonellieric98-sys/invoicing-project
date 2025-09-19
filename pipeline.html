@@ -366,6 +366,14 @@
                     responsive: true,
                     maintainAspectRatio: true,
                     aspectRatio: 1.5,
+                    layout: {
+                        padding: {
+                            top: 10,
+                            right: 10,
+                            bottom: 10,
+                            left: 10
+                        }
+                    },
                     plugins: {
                         legend: {
                             display: false
@@ -376,6 +384,18 @@
                             beginAtZero: true,
                             ticks: {
                                 stepSize: 1
+                            },
+                            grid: {
+                                drawBorder: false,
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#6B7280'
                             }
                         }
                     }
@@ -433,6 +453,14 @@
                     responsive: true,
                     maintainAspectRatio: true,
                     aspectRatio: 3,
+                    layout: {
+                        padding: {
+                            top: 10,
+                            right: 20,
+                            bottom: 10,
+                            left: 20
+                        }
+                    },
                     plugins: {
                         legend: {
                             position: 'top',
@@ -451,11 +479,18 @@
                             beginAtZero: true,
                             ticks: {
                                 stepSize: 1
+                            },
+                            grid: {
+                                drawBorder: false,
+                                color: 'rgba(0, 0, 0, 0.05)'
                             }
                         },
                         x: {
                             grid: {
                                 display: false
+                            },
+                            ticks: {
+                                color: '#6B7280'
                             }
                         }
                     }
