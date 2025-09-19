@@ -147,7 +147,7 @@
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow-xl">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">Monthly Pipeline Trend</h3>
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Current Pipeline Status</h3>
             <div class="relative h-80">
                 <canvas id="trendChart"></canvas>
             </div>
@@ -390,67 +390,49 @@
                 charts.trend.destroy();
             }
 
-            // Create monthly data for the last 6 months
-            const months = [];
-            const activeData = [];
-            const wonData = [];
-            const lostData = [];
+            // Get current data counts
+            const activeOpps = opportunities.filter(opp => opp.status === 'active' || !opp.status);
+            const wonOpps = opportunities.filter(opp => opp.status === 'won');
+            const lostOpps = opportunities.filter(opp => opp.status === 'lost');
 
-            for (let i = 5; i >= 0; i--) {
-                const date = new Date();
-                date.setMonth(date.getMonth() - i);
-                const monthYear = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-                months.push(monthYear);
-
-                // For demo purposes, we'll use random data since we don't have date tracking
-                // In a real app, you'd filter by creation/update dates
-                const activeCount = Math.floor(Math.random() * 10) + opportunities.filter(o => o.status === 'active' || !o.status).length / 6;
-                const wonCount = Math.floor(Math.random() * 5) + opportunities.filter(o => o.status === 'won').length / 6;
-                const lostCount = Math.floor(Math.random() * 3) + opportunities.filter(o => o.status === 'lost').length / 6;
-
-                activeData.push(activeCount);
-                wonData.push(wonCount);
-                lostData.push(lostCount);
-            }
-
+            // Create current month data (you would replace this with actual historical data in a real app)
+            const currentMonth = new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            
             charts.trend = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
-                    labels: months,
+                    labels: [currentMonth],
                     datasets: [
                         {
                             label: 'Active',
-                            data: activeData,
+                            data: [activeOpps.length],
+                            backgroundColor: '#3B82F6',
                             borderColor: '#3B82F6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            borderWidth: 2
+                            borderWidth: 1,
+                            borderRadius: 4
                         },
                         {
                             label: 'Won',
-                            data: wonData,
+                            data: [wonOpps.length],
+                            backgroundColor: '#10B981',
                             borderColor: '#10B981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            borderWidth: 2
+                            borderWidth: 1,
+                            borderRadius: 4
                         },
                         {
                             label: 'Lost',
-                            data: lostData,
+                            data: [lostOpps.length],
+                            backgroundColor: '#EF4444',
                             borderColor: '#EF4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            borderWidth: 2
+                            borderWidth: 1,
+                            borderRadius: 4
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
-                    aspectRatio: 2.5,
+                    aspectRatio: 3,
                     plugins: {
                         legend: {
                             position: 'top',
@@ -458,6 +440,10 @@
                                 usePointStyle: true,
                                 padding: 20
                             }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Current Pipeline Status'
                         }
                     },
                     scales: {
@@ -472,12 +458,6 @@
                                 display: false
                             }
                         }
-                    },
-                    elements: {
-                        point: {
-                            radius: 4,
-                            hoverRadius: 6
-                        }
                     }
                 }
             });
@@ -488,6 +468,21 @@
             if (probability <= 30) return 'bg-red-600';
             if (probability >= 80) return 'bg-green-600';
             return 'bg-yellow-500';
+        }
+
+        function getSegmentBadge(segment) {
+            switch(segment) {
+                case 'New Business':
+                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">New Business</span>';
+                case 'Existing Business':
+                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Existing Business</span>';
+                case 'Upsell':
+                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">Upsell</span>';
+                case 'Renewal':
+                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">Renewal</span>';
+                default:
+                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Unknown</span>';
+            }
         }
 
         function getStatusBadge(status) {
@@ -538,8 +533,8 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-900">${opp.clientName}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${opp.segment}</span></td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$${Number(opp.projectValue).toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${getSegmentBadge(opp.segment)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${Number(opp.projectValue).toLocaleString()}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
                             <div class="w-full bg-gray-200 rounded-full h-2.5">
