@@ -11,7 +11,6 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Custom scrollbar for better aesthetics */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -123,12 +122,11 @@
                     </tr>
                 </thead>
                 <tbody id="opportunities-tbody" class="divide-y divide-gray-200">
-                    <!-- Table rows will be inserted here by JavaScript -->
                 </tbody>
             </table>
-             <p id="no-data-message" class="text-center text-gray-500 py-8 hidden">No opportunities yet. Add one to get started!</p>
+            <p id="no-data-message" class="text-center text-gray-500 py-8 hidden">No opportunities yet. Add one to get started!</p>
         </div>
-         <div id="loading-indicator" class="text-center text-gray-500 py-8">Loading opportunities...</div>
+        <div id="loading-indicator" class="text-center text-gray-500 py-8">Loading opportunities...</div>
 
         <!-- Charts Section -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -243,13 +241,14 @@
                         </tr>
                     </thead>
                     <tbody id="status-opportunities-tbody" class="divide-y divide-gray-200">
-                        <!-- Rows will be inserted here -->
                     </tbody>
                 </table>
                 <p id="no-status-data-message" class="text-center text-gray-500 py-8 hidden">No opportunities found.</p>
             </div>
         </div>
     </div>
+
+    <!-- Confirm Delete Modal -->
     <div id="confirm-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 hidden opacity-0">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm m-4 transform transition-transform duration-300 scale-95">
             <h3 class="text-lg font-bold mb-4">Confirm Deletion</h3>
@@ -266,7 +265,7 @@
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         
-        // --- Firebase Configuration ---
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyD9SrWqQVL0_GxfBISBBezUOqQMbE_fiRU",
             authDomain: "invoicing-platform-f29ac.firebaseapp.com",
@@ -275,18 +274,20 @@
             messagingSenderId: "632172765378",
             appId: "1:632172765378:web:072134627a2226ddab9b5b",
             measurementId: "G-NSK0H0SQBE"
-        };    
+        };
 
-        
-        // --- App State ---
+        // App State
         let db;
         let auth;
         let opportunities = [];
         let sortConfig = { key: 'opportunityName', direction: 'ascending' };
         let user = null;
         let charts = {};
+        let deleteId = null;
+        let currentStatusFilter = null;
+        let salesTarget = 100000; // Default $100k
 
-        // --- DOM Elements ---
+        // DOM Elements
         const tbody = document.getElementById('opportunities-tbody');
         const searchInput = document.getElementById('search-input');
         const formModal = document.getElementById('form-modal');
@@ -303,19 +304,13 @@
         const targetModal = document.getElementById('target-modal');
         const targetForm = document.getElementById('target-form');
         const targetAmountInput = document.getElementById('target-amount');
-        let deleteId = null;
-        let currentStatusFilter = null;
-        let salesTarget = 0;
 
-        // --- Initialization ---
+        // Initialize Firebase
         try {
             const app = initializeApp(firebaseConfig);
             db = getFirestore(app);
             auth = getAuth(app);
             setLogLevel('debug');
-
-            // Load sales target from localStorage
-            loadSalesTarget();
 
             signInAnonymously(auth).catch(error => console.error("Anonymous sign-in failed:", error));
             onAuthStateChanged(auth, (currentUser) => {
@@ -330,13 +325,12 @@
                     updateCharts();
                 }
             });
-
         } catch (error) {
             console.error("Error initializing Firebase:", error);
             loadingIndicator.textContent = "Error connecting to the database.";
         }
-        
-        // --- Data Fetching ---
+
+        // Data Fetching
         function subscribeToOpportunities() {
             if (!user || !db) return;
             const opportunitiesCollection = collection(db, 'opportunities');
@@ -347,7 +341,6 @@
                 updateSummaryCards();
                 updateCharts();
                 
-                // Refresh status modal if it's currently open
                 if (currentStatusFilter && statusModal && !statusModal.classList.contains('hidden')) {
                     renderStatusModal();
                 }
@@ -357,7 +350,7 @@
             });
         }
 
-        // --- Summary Cards ---
+        // Summary Cards
         function updateSummaryCards() {
             const activeOpps = opportunities.filter(opp => opp.status === 'active' || !opp.status);
             const wonOpps = opportunities.filter(opp => opp.status === 'won');
@@ -371,7 +364,7 @@
             document.getElementById('pipeline-value').textContent = `$${pipelineValue.toLocaleString()}`;
         }
 
-        // --- Charts ---
+        // Charts
         function updateCharts() {
             updateSegmentChart();
             updateWinRateChart();
@@ -393,7 +386,6 @@
                 segmentData[segment] = (segmentData[segment] || 0) + (opp.projectValue || 0);
             });
 
-            // Sort by value (descending) and prepare data
             const sortedEntries = Object.entries(segmentData).sort((a, b) => b[1] - a[1]);
             const labels = sortedEntries.map(entry => entry[0]);
             const values = sortedEntries.map(entry => entry[1]);
@@ -404,9 +396,7 @@
                     labels: labels,
                     datasets: [{
                         data: values,
-                        backgroundColor: [
-                            '#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6'
-                        ],
+                        backgroundColor: ['#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6'],
                         borderWidth: 2,
                         borderColor: '#ffffff'
                     }]
@@ -414,23 +404,13 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: {
-                        padding: {
-                            top: 10,
-                            bottom: 10,
-                            left: 10,
-                            right: 10
-                        }
-                    },
                     plugins: {
                         legend: {
                             position: 'bottom',
                             labels: {
                                 padding: 8,
                                 usePointStyle: true,
-                                font: {
-                                    size: 12
-                                }
+                                font: { size: 12 }
                             }
                         }
                     }
@@ -464,43 +444,18 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: {
-                        padding: {
-                            top: 10,
-                            right: 10,
-                            bottom: 10,
-                            left: 10
-                        }
-                    },
                     plugins: {
-                        legend: {
-                            display: false
-                        }
+                        legend: { display: false }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: {
-                                stepSize: 1,
-                                font: {
-                                    size: 11
-                                }
-                            },
-                            grid: {
-                                drawBorder: false,
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            }
+                            ticks: { stepSize: 1, font: { size: 11 } },
+                            grid: { drawBorder: false, color: 'rgba(0, 0, 0, 0.05)' }
                         },
                         x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                color: '#6B7280',
-                                font: {
-                                    size: 11
-                                }
-                            }
+                            grid: { display: false },
+                            ticks: { color: '#6B7280', font: { size: 11 } }
                         }
                     }
                 }
@@ -514,11 +469,8 @@
                 charts.trend.destroy();
             }
 
-            // Calculate won opportunities total value
             const wonOpps = opportunities.filter(opp => opp.status === 'won');
             const totalWonValue = wonOpps.reduce((sum, opp) => sum + (opp.projectValue || 0), 0);
-
-            // Create current month data
             const currentMonth = new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
             
             charts.trend = new Chart(ctx, {
@@ -527,7 +479,7 @@
                     labels: [currentMonth],
                     datasets: [
                         {
-                            label: `Target (${salesTarget.toLocaleString()})`,
+                            label: `Target ($${salesTarget.toLocaleString()})`,
                             data: [salesTarget],
                             backgroundColor: '#E5E7EB',
                             borderColor: '#9CA3AF',
@@ -535,7 +487,7 @@
                             borderRadius: 4
                         },
                         {
-                            label: `Won (${totalWonValue.toLocaleString()})`,
+                            label: `Won ($${totalWonValue.toLocaleString()})`,
                             data: [totalWonValue],
                             backgroundColor: totalWonValue >= salesTarget ? '#10B981' : '#EF4444',
                             borderColor: totalWonValue >= salesTarget ? '#059669' : '#DC2626',
@@ -548,32 +500,19 @@
                     responsive: true,
                     maintainAspectRatio: true,
                     aspectRatio: 3,
-                    layout: {
-                        padding: {
-                            top: 10,
-                            right: 20,
-                            bottom: 10,
-                            left: 20
-                        }
-                    },
                     plugins: {
                         legend: {
                             position: 'top',
                             labels: {
                                 usePointStyle: true,
                                 padding: 20,
-                                font: {
-                                    size: 12
-                                }
+                                font: { size: 12 }
                             }
                         },
                         title: {
                             display: true,
                             text: `Performance: ${((totalWonValue / salesTarget) * 100).toFixed(1)}% of Target`,
-                            font: {
-                                size: 14,
-                                weight: 'normal'
-                            },
+                            font: { size: 14, weight: 'normal' },
                             color: '#6B7280'
                         }
                     },
@@ -582,393 +521,22 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    return '
-
-        // --- Rendering ---
-        function getProbabilityColorClass(probability) {
-            if (probability <= 30) return 'bg-red-600';
-            if (probability >= 80) return 'bg-green-600';
-            return 'bg-yellow-500';
-        }
-
-        function getSegmentBadge(segment) {
-            switch(segment) {
-                case 'New Business':
-                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">New Business</span>';
-                case 'Existing Business':
-                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Existing Business</span>';
-                case 'Upsell':
-                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">Upsell</span>';
-                case 'Renewal':
-                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">Renewal</span>';
-                default:
-                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Unknown</span>';
-            }
-        }
-
-        function getStatusBadge(status) {
-            switch(status) {
-                case 'won':
-                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Won</span>';
-                case 'lost':
-                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Lost</span>';
-                default:
-                    return '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Active</span>';
-            }
-        }
-
-        function render() {
-            tbody.innerHTML = ''; // Clear existing rows
-            
-            // Only show active opportunities in the main table
-            const activeOpportunities = opportunities.filter(opp => opp.status === 'active' || !opp.status);
-            noDataMessage.classList.toggle('hidden', activeOpportunities.length > 0);
-
-            const searchTerm = searchInput.value.toLowerCase();
-            let filteredOpportunities = activeOpportunities.filter(op =>
-                Object.values(op).some(val =>
-                    String(val).toLowerCase().includes(searchTerm)
-                )
-            );
-
-            // Sorting
-            filteredOpportunities.sort((a, b) => {
-                const valA = a[sortConfig.key];
-                const valB = b[sortConfig.key];
-                if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
-                if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
-                return 0;
-            });
-            
-            updateSortHeaders();
-
-            filteredOpportunities.forEach(opp => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50 transition duration-150';
-                const probColorClass = getProbabilityColorClass(opp.winProbability);
-                tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="font-medium text-gray-900">${opp.opportunityName}</div>
-                        <div class="text-sm text-gray-500">${opp.description || ''}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${opp.clientName}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">${getSegmentBadge(opp.segment)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${Number(opp.projectValue).toLocaleString()}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                            <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                <div class="${probColorClass} h-2.5 rounded-full" style="width: ${opp.winProbability}%"></div>
-                            </div>
-                            <span class="ml-3 text-sm font-medium">${opp.winProbability}%</span>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">${getStatusBadge(opp.status)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button class="text-indigo-600 hover:text-indigo-900 edit-btn mr-2" data-id="${opp.id}">Edit</button>
-                        <button class="text-green-600 hover:text-green-900 won-btn mr-2" data-id="${opp.id}">Won</button>
-                        <button class="text-red-600 hover:text-red-900 lost-btn mr-2" data-id="${opp.id}">Lost</button>
-                        <button class="text-red-600 hover:text-red-900 delete-btn" data-id="${opp.id}">Delete</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-        
-        function updateSortHeaders() {
-             document.querySelectorAll('th[data-sort-key]').forEach(th => {
-                const key = th.dataset.sortKey;
-                th.innerHTML = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                if (sortConfig.key === key) {
-                    th.innerHTML += sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
-                }
-             });
-        }
-
-        // --- Target Management ---
-        function loadSalesTarget() {
-            // Since localStorage isn't supported in Claude artifacts, use a default value
-            salesTarget = 100000; // Default $100k
-        }
-
-        function saveSalesTarget(amount) {
-            salesTarget = amount;
-            // In a real environment, you would save this to localStorage or a database
-            // localStorage.setItem('salesTarget', amount.toString());
-        }
-
-        function openTargetModal() {
-            targetAmountInput.value = salesTarget;
-            targetModal.classList.remove('hidden');
-            setTimeout(() => {
-                targetModal.classList.remove('opacity-0');
-                targetModal.querySelector('div').classList.remove('scale-95');
-            }, 10);
-        }
-
-        function closeTargetModal() {
-            targetModal.classList.add('opacity-0');
-            targetModal.querySelector('div').classList.add('scale-95');
-            setTimeout(() => targetModal.classList.add('hidden'), 300);
-        }
-        function openStatusModal(status) {
-            console.log('Opening status modal for:', status);
-            console.log('Current opportunities:', opportunities);
-            
-            currentStatusFilter = status;
-            statusModalTitle.textContent = status === 'won' ? 'Won Opportunities' : 'Lost Opportunities';
-            
-            const filteredOpps = opportunities.filter(opp => opp.status === status);
-            console.log('Filtered opportunities:', filteredOpps);
-            
-            renderStatusModal();
-            
-            statusModal.classList.remove('hidden');
-            setTimeout(() => {
-                statusModal.classList.remove('opacity-0');
-                statusModal.querySelector('div').classList.remove('scale-95');
-            }, 10);
-        }
-
-        function closeStatusModal() {
-            statusModal.classList.add('opacity-0');
-            statusModal.querySelector('div').classList.add('scale-95');
-            setTimeout(() => {
-                statusModal.classList.add('hidden');
-                currentStatusFilter = null;
-            }, 300);
-        }
-
-        function renderStatusModal() {
-            statusTbody.innerHTML = '';
-            
-            const filteredOpps = opportunities.filter(opp => opp.status === currentStatusFilter);
-            noStatusDataMessage.classList.toggle('hidden', filteredOpps.length > 0);
-
-            filteredOpps.forEach(opp => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50 transition duration-150';
-                const probColorClass = getProbabilityColorClass(opp.winProbability);
-                
-                tr.innerHTML = `
-                    <td class="px-4 py-4 whitespace-nowrap">
-                        <div class="font-medium text-gray-900">${opp.opportunityName}</div>
-                        <div class="text-sm text-gray-500">${opp.description || ''}</div>
-                    </td>
-                    <td class="px-4 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${opp.clientName}</div>
-                    </td>
-                    <td class="px-4 py-4 whitespace-nowrap">${getSegmentBadge(opp.segment)}</td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${Number(opp.projectValue).toLocaleString()}</td>
-                    <td class="px-4 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                            <div class="w-16 bg-gray-200 rounded-full h-2">
-                                <div class="${probColorClass} h-2 rounded-full" style="width: ${opp.winProbability}%"></div>
-                            </div>
-                            <span class="ml-2 text-sm font-medium">${opp.winProbability}%</span>
-                        </div>
-                    </td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                        <button class="text-indigo-600 hover:text-indigo-900 edit-btn mr-2" data-id="${opp.id}">Edit</button>
-                        <button class="text-blue-600 hover:text-blue-900 reactivate-btn mr-2" data-id="${opp.id}">Reactivate</button>
-                        <button class="text-red-600 hover:text-red-900 delete-btn" data-id="${opp.id}">Delete</button>
-                    </td>
-                `;
-                statusTbody.appendChild(tr);
-            });
-        }
-        searchInput.addEventListener('input', render);
-        
-        document.querySelector('thead').addEventListener('click', (e) => {
-            const key = e.target.dataset.sortKey;
-            if (!key) return;
-
-            const direction = sortConfig.key === key && sortConfig.direction === 'ascending' ? 'descending' : 'ascending';
-            sortConfig = { key, direction };
-            render();
-        });
-
-        tbody.addEventListener('click', e => {
-            const id = e.target.dataset.id;
-            
-            if (e.target.classList.contains('edit-btn')) {
-                const opp = opportunities.find(o => o.id === id);
-                openModal(opp);
-            }
-            if (e.target.classList.contains('delete-btn')) {
-                deleteId = id;
-                openConfirmModal();
-            }
-            if (e.target.classList.contains('won-btn')) {
-                updateOpportunityStatus(id, 'won');
-            }
-            if (e.target.classList.contains('lost-btn')) {
-                updateOpportunityStatus(id, 'lost');
-            }
-        });
-
-        opportunityForm.addEventListener('submit', handleFormSubmit);
-        document.getElementById('add-opportunity-btn').addEventListener('click', () => openModal());
-        document.getElementById('cancel-btn').addEventListener('click', closeModal);
-        document.getElementById('winProbability').addEventListener('input', e => {
-            document.getElementById('win-probability-value').textContent = e.target.value;
-        });
-
-        // --- Status Updates ---
-        async function updateOpportunityStatus(id, status) {
-            if (!db) return;
-            
-            try {
-                const oppRef = doc(db, 'opportunities', id);
-                await updateDoc(oppRef, { status: status });
-                
-                // Refresh status modal if it's open and matches current filter
-                if (currentStatusFilter && statusModal && !statusModal.classList.contains('hidden')) {
-                    setTimeout(() => renderStatusModal(), 100);
-                }
-            } catch (error) {
-                console.error("Error updating status: ", error);
-            }
-        }
-
-        // --- Modal Handling ---
-        function openModal(opportunity = null) {
-            opportunityForm.reset();
-            document.getElementById('win-probability-value').textContent = '50';
-            if (opportunity) {
-                modalTitle.textContent = 'Edit Opportunity';
-                submitBtn.textContent = 'Update';
-                document.getElementById('opportunity-id').value = opportunity.id;
-                document.getElementById('opportunityName').value = opportunity.opportunityName;
-                document.getElementById('clientName').value = opportunity.clientName;
-                document.getElementById('segment').value = opportunity.segment;
-                document.getElementById('projectValue').value = opportunity.projectValue;
-                document.getElementById('winProbability').value = opportunity.winProbability;
-                document.getElementById('win-probability-value').textContent = opportunity.winProbability;
-                document.getElementById('description').value = opportunity.description || '';
-            } else {
-                modalTitle.textContent = 'New Opportunity';
-                submitBtn.textContent = 'Add';
-                document.getElementById('opportunity-id').value = '';
-            }
-            
-            formModal.classList.remove('hidden');
-            setTimeout(() => {
-                formModal.classList.remove('opacity-0');
-                formModal.querySelector('div').classList.remove('scale-95');
-            }, 10);
-        }
-
-        function closeModal() {
-            formModal.classList.add('opacity-0');
-            formModal.querySelector('div').classList.add('scale-95');
-            setTimeout(() => formModal.classList.add('hidden'), 300);
-        }
-
-        // --- CRUD Operations ---
-        async function handleFormSubmit(e) {
-            e.preventDefault();
-            if (!db) return;
-
-            const id = document.getElementById('opportunity-id').value;
-            const data = {
-                opportunityName: document.getElementById('opportunityName').value,
-                clientName: document.getElementById('clientName').value,
-                segment: document.getElementById('segment').value,
-                projectValue: Number(document.getElementById('projectValue').value),
-                winProbability: Number(document.getElementById('winProbability').value),
-                description: document.getElementById('description').value,
-                status: 'active' // Default status for new opportunities
-            };
-            
-            // Basic validation
-            if (!data.opportunityName || !data.clientName || !data.projectValue || data.projectValue <= 0) {
-                 console.error("Validation failed: Please fill all required fields and ensure project value is positive.");
-                 return;
-            }
-
-            try {
-                if (id) { // Update
-                    const oppRef = doc(db, 'opportunities', id);
-                    // Don't overwrite status when editing
-                    delete data.status;
-                    await updateDoc(oppRef, data);
-                } else { // Add
-                    await addDoc(collection(db, 'opportunities'), data);
-                }
-                closeModal();
-            } catch (error) {
-                console.error("Error saving document: ", error);
-            }
-        }
-        
-        // --- Deletion Confirmation ---
-        function openConfirmModal() {
-            confirmModal.classList.remove('hidden');
-            setTimeout(() => {
-                confirmModal.classList.remove('opacity-0');
-                confirmModal.querySelector('div').classList.remove('scale-95');
-            }, 10);
-        }
-
-        function closeConfirmModal() {
-            confirmModal.classList.add('opacity-0');
-            confirmModal.querySelector('div').classList.add('scale-95');
-            setTimeout(() => {
-                confirmModal.classList.add('hidden');
-                deleteId = null;
-            }, 300);
-        }
-
-        document.getElementById('confirm-cancel-btn').addEventListener('click', closeConfirmModal);
-        document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
-            if (deleteId && db) {
-                 try {
-                    await deleteDoc(doc(db, 'opportunities', deleteId));
-                } catch (error) {
-                    console.error("Error deleting document: ", error);
-                } finally {
-                    closeConfirmModal();
-                    // Refresh status modal if it's open
-                    if (currentStatusFilter) {
-                        renderStatusModal();
-                    }
-                }
-            }
-        });
-
-    </script>
-
-</body>
-</html> + value.toLocaleString();
+                                    return '$' + value.toLocaleString();
                                 },
-                                font: {
-                                    size: 11
-                                }
+                                font: { size: 11 }
                             },
-                            grid: {
-                                drawBorder: false,
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            }
+                            grid: { drawBorder: false, color: 'rgba(0, 0, 0, 0.05)' }
                         },
                         x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                color: '#6B7280',
-                                font: {
-                                    size: 11
-                                }
-                            }
+                            grid: { display: false },
+                            ticks: { color: '#6B7280', font: { size: 11 } }
                         }
                     }
                 }
             });
         }
 
-        // --- Rendering ---
+        // Helper Functions
         function getProbabilityColorClass(probability) {
             if (probability <= 30) return 'bg-red-600';
             if (probability >= 80) return 'bg-green-600';
@@ -1001,10 +569,10 @@
             }
         }
 
+        // Rendering
         function render() {
-            tbody.innerHTML = ''; // Clear existing rows
+            tbody.innerHTML = '';
             
-            // Only show active opportunities in the main table
             const activeOpportunities = opportunities.filter(opp => opp.status === 'active' || !opp.status);
             noDataMessage.classList.toggle('hidden', activeOpportunities.length > 0);
 
@@ -1015,7 +583,6 @@
                 )
             );
 
-            // Sorting
             filteredOpportunities.sort((a, b) => {
                 const valA = a[sortConfig.key];
                 const valB = b[sortConfig.key];
@@ -1061,66 +628,13 @@
         }
         
         function updateSortHeaders() {
-             document.querySelectorAll('th[data-sort-key]').forEach(th => {
+            document.querySelectorAll('th[data-sort-key]').forEach(th => {
                 const key = th.dataset.sortKey;
                 th.innerHTML = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                 if (sortConfig.key === key) {
                     th.innerHTML += sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
                 }
-             });
-        }
-
-        // --- Target Management ---
-        function loadSalesTarget() {
-            const saved = localStorage.getItem('salesTarget');
-            salesTarget = saved ? parseFloat(saved) : 100000; // Default $100k
-        }
-
-        function saveSalesTarget(amount) {
-            salesTarget = amount;
-            localStorage.setItem('salesTarget', amount.toString());
-        }
-
-        function openTargetModal() {
-            targetAmountInput.value = salesTarget;
-            targetModal.classList.remove('hidden');
-            setTimeout(() => {
-                targetModal.classList.remove('opacity-0');
-                targetModal.querySelector('div').classList.remove('scale-95');
-            }, 10);
-        }
-
-        function closeTargetModal() {
-            targetModal.classList.add('opacity-0');
-            targetModal.querySelector('div').classList.add('scale-95');
-            setTimeout(() => targetModal.classList.add('hidden'), 300);
-        }
-        function openStatusModal(status) {
-            console.log('Opening status modal for:', status);
-            console.log('Current opportunities:', opportunities);
-            
-            currentStatusFilter = status;
-            statusModalTitle.textContent = status === 'won' ? 'Won Opportunities' : 'Lost Opportunities';
-            
-            const filteredOpps = opportunities.filter(opp => opp.status === status);
-            console.log('Filtered opportunities:', filteredOpps);
-            
-            renderStatusModal();
-            
-            statusModal.classList.remove('hidden');
-            setTimeout(() => {
-                statusModal.classList.remove('opacity-0');
-                statusModal.querySelector('div').classList.remove('scale-95');
-            }, 10);
-        }
-
-        function closeStatusModal() {
-            statusModal.classList.add('opacity-0');
-            statusModal.querySelector('div').classList.add('scale-95');
-            setTimeout(() => {
-                statusModal.classList.add('hidden');
-                currentStatusFilter = null;
-            }, 300);
+            });
         }
 
         function renderStatusModal() {
@@ -1161,61 +675,8 @@
                 statusTbody.appendChild(tr);
             });
         }
-        searchInput.addEventListener('input', render);
-        
-        document.querySelector('thead').addEventListener('click', (e) => {
-            const key = e.target.dataset.sortKey;
-            if (!key) return;
 
-            const direction = sortConfig.key === key && sortConfig.direction === 'ascending' ? 'descending' : 'ascending';
-            sortConfig = { key, direction };
-            render();
-        });
-
-        tbody.addEventListener('click', e => {
-            const id = e.target.dataset.id;
-            
-            if (e.target.classList.contains('edit-btn')) {
-                const opp = opportunities.find(o => o.id === id);
-                openModal(opp);
-            }
-            if (e.target.classList.contains('delete-btn')) {
-                deleteId = id;
-                openConfirmModal();
-            }
-            if (e.target.classList.contains('won-btn')) {
-                updateOpportunityStatus(id, 'won');
-            }
-            if (e.target.classList.contains('lost-btn')) {
-                updateOpportunityStatus(id, 'lost');
-            }
-        });
-
-        opportunityForm.addEventListener('submit', handleFormSubmit);
-        document.getElementById('add-opportunity-btn').addEventListener('click', () => openModal());
-        document.getElementById('cancel-btn').addEventListener('click', closeModal);
-        document.getElementById('winProbability').addEventListener('input', e => {
-            document.getElementById('win-probability-value').textContent = e.target.value;
-        });
-
-        // --- Status Updates ---
-        async function updateOpportunityStatus(id, status) {
-            if (!db) return;
-            
-            try {
-                const oppRef = doc(db, 'opportunities', id);
-                await updateDoc(oppRef, { status: status });
-                
-                // Refresh status modal if it's open and matches current filter
-                if (currentStatusFilter && statusModal && !statusModal.classList.contains('hidden')) {
-                    setTimeout(() => renderStatusModal(), 100);
-                }
-            } catch (error) {
-                console.error("Error updating status: ", error);
-            }
-        }
-
-        // --- Modal Handling ---
+        // Modal Functions
         function openModal(opportunity = null) {
             opportunityForm.reset();
             document.getElementById('win-probability-value').textContent = '50';
@@ -1249,44 +710,42 @@
             setTimeout(() => formModal.classList.add('hidden'), 300);
         }
 
-        // --- CRUD Operations ---
-        async function handleFormSubmit(e) {
-            e.preventDefault();
-            if (!db) return;
-
-            const id = document.getElementById('opportunity-id').value;
-            const data = {
-                opportunityName: document.getElementById('opportunityName').value,
-                clientName: document.getElementById('clientName').value,
-                segment: document.getElementById('segment').value,
-                projectValue: Number(document.getElementById('projectValue').value),
-                winProbability: Number(document.getElementById('winProbability').value),
-                description: document.getElementById('description').value,
-                status: 'active' // Default status for new opportunities
-            };
+        function openStatusModal(status) {
+            currentStatusFilter = status;
+            statusModalTitle.textContent = status === 'won' ? 'Won Opportunities' : 'Lost Opportunities';
+            renderStatusModal();
             
-            // Basic validation
-            if (!data.opportunityName || !data.clientName || !data.projectValue || data.projectValue <= 0) {
-                 console.error("Validation failed: Please fill all required fields and ensure project value is positive.");
-                 return;
-            }
-
-            try {
-                if (id) { // Update
-                    const oppRef = doc(db, 'opportunities', id);
-                    // Don't overwrite status when editing
-                    delete data.status;
-                    await updateDoc(oppRef, data);
-                } else { // Add
-                    await addDoc(collection(db, 'opportunities'), data);
-                }
-                closeModal();
-            } catch (error) {
-                console.error("Error saving document: ", error);
-            }
+            statusModal.classList.remove('hidden');
+            setTimeout(() => {
+                statusModal.classList.remove('opacity-0');
+                statusModal.querySelector('div').classList.remove('scale-95');
+            }, 10);
         }
-        
-        // --- Deletion Confirmation ---
+
+        function closeStatusModal() {
+            statusModal.classList.add('opacity-0');
+            statusModal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => {
+                statusModal.classList.add('hidden');
+                currentStatusFilter = null;
+            }, 300);
+        }
+
+        function openTargetModal() {
+            targetAmountInput.value = salesTarget;
+            targetModal.classList.remove('hidden');
+            setTimeout(() => {
+                targetModal.classList.remove('opacity-0');
+                targetModal.querySelector('div').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeTargetModal() {
+            targetModal.classList.add('opacity-0');
+            targetModal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => targetModal.classList.add('hidden'), 300);
+        }
+
         function openConfirmModal() {
             confirmModal.classList.remove('hidden');
             setTimeout(() => {
@@ -1304,16 +763,135 @@
             }, 300);
         }
 
+        // CRUD Operations
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            if (!db) return;
+
+            const id = document.getElementById('opportunity-id').value;
+            const data = {
+                opportunityName: document.getElementById('opportunityName').value,
+                clientName: document.getElementById('clientName').value,
+                segment: document.getElementById('segment').value,
+                projectValue: Number(document.getElementById('projectValue').value),
+                winProbability: Number(document.getElementById('winProbability').value),
+                description: document.getElementById('description').value,
+                status: 'active'
+            };
+            
+            if (!data.opportunityName || !data.clientName || !data.projectValue || data.projectValue <= 0) {
+                console.error("Validation failed: Please fill all required fields and ensure project value is positive.");
+                return;
+            }
+
+            try {
+                if (id) {
+                    const oppRef = doc(db, 'opportunities', id);
+                    delete data.status;
+                    await updateDoc(oppRef, data);
+                } else {
+                    await addDoc(collection(db, 'opportunities'), data);
+                }
+                closeModal();
+            } catch (error) {
+                console.error("Error saving document: ", error);
+            }
+        }
+
+        async function updateOpportunityStatus(id, status) {
+            if (!db) return;
+            
+            try {
+                const oppRef = doc(db, 'opportunities', id);
+                await updateDoc(oppRef, { status: status });
+                
+                if (currentStatusFilter && statusModal && !statusModal.classList.contains('hidden')) {
+                    setTimeout(() => renderStatusModal(), 100);
+                }
+            } catch (error) {
+                console.error("Error updating status: ", error);
+            }
+        }
+
+        // Event Listeners
+        searchInput.addEventListener('input', render);
+        
+        document.querySelector('thead').addEventListener('click', (e) => {
+            const key = e.target.dataset.sortKey;
+            if (!key) return;
+
+            const direction = sortConfig.key === key && sortConfig.direction === 'ascending' ? 'descending' : 'ascending';
+            sortConfig = { key, direction };
+            render();
+        });
+
+        tbody.addEventListener('click', e => {
+            const id = e.target.dataset.id;
+            
+            if (e.target.classList.contains('edit-btn')) {
+                const opp = opportunities.find(o => o.id === id);
+                openModal(opp);
+            }
+            if (e.target.classList.contains('delete-btn')) {
+                deleteId = id;
+                openConfirmModal();
+            }
+            if (e.target.classList.contains('won-btn')) {
+                updateOpportunityStatus(id, 'won');
+            }
+            if (e.target.classList.contains('lost-btn')) {
+                updateOpportunityStatus(id, 'lost');
+            }
+        });
+
+        statusTbody.addEventListener('click', e => {
+            const id = e.target.dataset.id;
+            
+            if (e.target.classList.contains('edit-btn')) {
+                const opp = opportunities.find(o => o.id === id);
+                openModal(opp);
+            }
+            if (e.target.classList.contains('delete-btn')) {
+                deleteId = id;
+                openConfirmModal();
+            }
+            if (e.target.classList.contains('reactivate-btn')) {
+                updateOpportunityStatus(id, 'active');
+            }
+        });
+
+        opportunityForm.addEventListener('submit', handleFormSubmit);
+        document.getElementById('add-opportunity-btn').addEventListener('click', () => openModal());
+        document.getElementById('cancel-btn').addEventListener('click', closeModal);
+        document.getElementById('winProbability').addEventListener('input', e => {
+            document.getElementById('win-probability-value').textContent = e.target.value;
+        });
+
+        document.getElementById('won-card').addEventListener('click', () => openStatusModal('won'));
+        document.getElementById('lost-card').addEventListener('click', () => openStatusModal('lost'));
+        document.getElementById('close-status-modal').addEventListener('click', closeStatusModal);
+
+        document.getElementById('edit-target-btn').addEventListener('click', openTargetModal);
+        document.getElementById('cancel-target-btn').addEventListener('click', closeTargetModal);
+        targetForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const amount = parseFloat(targetAmountInput.value);
+            if (amount > 0) {
+                salesTarget = amount;
+                updateCharts();
+                closeTargetModal();
+            }
+        });
+
         document.getElementById('confirm-cancel-btn').addEventListener('click', closeConfirmModal);
         document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
             if (deleteId && db) {
-                 try {
+                try {
                     await deleteDoc(doc(db, 'opportunities', deleteId));
                 } catch (error) {
                     console.error("Error deleting document: ", error);
                 } finally {
                     closeConfirmModal();
-                    // Refresh status modal if it's open
                     if (currentStatusFilter) {
                         renderStatusModal();
                     }
