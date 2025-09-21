@@ -293,7 +293,7 @@
         let charts = {};
         let deleteId = null;
         let currentStatusFilter = null;
-        let salesTarget = 100000; // Default $100k
+        let salesTarget = 100000;
 
         // DOM Elements
         const tbody = document.getElementById('opportunities-tbody');
@@ -495,7 +495,7 @@
                             borderRadius: 4
                         },
                         {
-                            label: `Won (${totalWonValue.toLocaleString()})`,
+                            label: `Won ($${totalWonValue.toLocaleString()})`,
                             data: [totalWonValue],
                             backgroundColor: '#10B981',
                             borderColor: '#059669',
@@ -527,13 +527,19 @@
                     scales: {
                         y: {
                             beginAtZero: true,
+                            min: 0,
                             ticks: {
                                 callback: function(value) {
                                     return '$' + value.toLocaleString();
                                 },
                                 font: { size: 11 }
                             },
-                            grid: { drawBorder: false, color: 'rgba(0, 0, 0, 0.05)' }
+                            grid: { 
+                                drawBorder: true, 
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                borderColor: '#D1D5DB',
+                                borderWidth: 1
+                            }
                         },
                         x: {
                             grid: { display: false },
