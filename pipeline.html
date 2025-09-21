@@ -151,7 +151,7 @@
                     Edit Target
                 </button>
             </div>
-            <div class="relative h-80">
+            <div class="relative h-80 overflow-hidden">
                 <canvas id="trendChart"></canvas>
             </div>
         </div>
@@ -487,10 +487,10 @@
                             borderRadius: 4
                         },
                         {
-                            label: `Won ($${totalWonValue.toLocaleString()})`,
+                            label: `Won (${totalWonValue.toLocaleString()})`,
                             data: [totalWonValue],
-                            backgroundColor: totalWonValue >= salesTarget ? '#10B981' : '#EF4444',
-                            borderColor: totalWonValue >= salesTarget ? '#059669' : '#DC2626',
+                            backgroundColor: '#10B981',
+                            borderColor: '#059669',
                             borderWidth: 2,
                             borderRadius: 4
                         }
