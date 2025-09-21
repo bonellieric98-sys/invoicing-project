@@ -688,13 +688,14 @@
 
         // --- Target Management ---
         function loadSalesTarget() {
-            const saved = localStorage.getItem('salesTarget');
-            salesTarget = saved ? parseFloat(saved) : 100000; // Default $100k
+            // Since localStorage isn't supported in Claude artifacts, use a default value
+            salesTarget = 100000; // Default $100k
         }
 
         function saveSalesTarget(amount) {
             salesTarget = amount;
-            localStorage.setItem('salesTarget', amount.toString());
+            // In a real environment, you would save this to localStorage or a database
+            // localStorage.setItem('salesTarget', amount.toString());
         }
 
         function openTargetModal() {
